@@ -1,0 +1,22 @@
+#!/bin/sh 
+
+echo "Content-type: text/html"
+echo ""
+echo "--------Debug JSON---------"
+echo "<br>"
+TRANS_QS=$(echo $QUERY_STRING | urldecode)
+echo "Translated query string: $TRANS_QS"
+echo "<br>"
+METHOD=$(echo $TRANS_QS | jsawk 'return this.method')
+echo "Method: $METHOD"
+echo "<br>"
+TARGET=$(echo $TRANS_QS | jsawk 'return this.target')
+echo "Target: $TARGET"
+echo "<br>"
+echo "Run script: rpc-func/$METHOD/$TARGET"
+echo "<br>"
+echo "---------------------------"
+echo "<br>"
+
+RET=$(/www/cgi-bin/rpc-func/$METHOD/$TARGET $TRANS_QS)
+echo $RET

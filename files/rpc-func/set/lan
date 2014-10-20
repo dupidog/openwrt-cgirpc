@@ -1,0 +1,8 @@
+#!/bin/sh
+LAN_IP=$(echo ${1} | jsawk 'return this.ip')
+LAN_MASK=$(echo ${1} | jsawk 'return this.netmask')
+uci set network.lan.ipaddr=$LAN_IP
+uci set network.lan.netmask=$LAN_MASK
+#uci commit
+#network
+echo "{\"ret\":\"OK\",\"ip\":\"$LAN_IP\",\"netmask\":\"$LAN_MASK\"}"
