@@ -1,8 +1,19 @@
 #!/bin/sh
-LAN_IP=$(echo ${1} | jsawk 'return this.ip')
-LAN_MASK=$(echo ${1} | jsawk 'return this.netmask')
+
+LAN_IP=$(echo ${1} | jsawk 'return this.ip' | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$")
+LAN_MASK=$(echo ${1} | jsawk 'return this.netmask' | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$")
+
+if [ 'x$LAN_IP' != 'x' -a 'x$LAN_MASK' != 'x' ]; then
+
 uci set network.lan.ipaddr=$LAN_IP
 uci set network.lan.netmask=$LAN_MASK
-#uci commit
-#network
+uci commit network
+#/etc/init.d/network restart
+
 echo "{\"ret\":\"OK\",\"ip\":\"$LAN_IP\",\"netmask\":\"$LAN_MASK\"}"
+
+else
+
+echo "{\"ret\":\"NOT_CHANGED\"}"
+
+fi

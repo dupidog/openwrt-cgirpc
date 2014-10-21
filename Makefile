@@ -42,6 +42,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/cgi-rpc
         SECTION:=utils
         CATEGORY:=Utilities
+        DEPENDS:=uhttpd js
         TITLE:=CGI RPC interface of router
 endef
 
@@ -86,9 +87,20 @@ endef
 #endef
 define Package/cgi-rpc/install
 	$(INSTALL_DIR) $(1)/usr/lib/cgi-rpc
-	$(CP) ./files/* $(1)/usr/lib/cgi-rpc
+	$(CP) ./files/rpc-func $(1)/usr/lib/cgi-rpc
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(CP) ./files/common-func/* $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/etc/config
+	$(CP) ./files/cgirpc.config $(1)/etc/config/cgirpc
+	$(INSTALL_DIR) $(1)/www/cgi-bin
+	$(CP) ./files/cgi-rpc $(1)/www/cgi-bin/cgi-rpc
 endef
 
+
+define Package/cgi-rpc/postrm
+	#!/bin/sh
+	rm -rf /usr/lib/cgi-rpc
+endef
 
 # This line executes the necessary commands to compile our program.
 # The above define directives specify all the information needed, but this

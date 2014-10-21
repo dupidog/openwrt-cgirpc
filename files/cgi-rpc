@@ -1,22 +1,33 @@
 #!/bin/sh 
 
+DEBUG=$(uci get cgirpc.debug.enabled)
+RPC_FUNC_PATH=$(uci get cgirpc.common.rpc_func_path)
+
+if [ x$RPC_FUNC_PATH = 'x' ]; then
+RPC_FUNC_PATH='/usr/lib/cgi-rpc/rpc-func'
+fi
+
+TRANS_QS=$(echo $QUERY_STRING | urldecode)
+METHOD=$(echo $TRANS_QS | jsawk 'return this.method')
+TARGET=$(echo $TRANS_QS | jsawk 'return this.target')
+
 echo "Content-type: text/html"
 echo ""
+
+if [ $DEBUG != '0' || x$DEBUG = 'x' ]; then
 echo "--------Debug JSON---------"
 echo "<br>"
-TRANS_QS=$(echo $QUERY_STRING | urldecode)
 echo "Translated query string: $TRANS_QS"
 echo "<br>"
-METHOD=$(echo $TRANS_QS | jsawk 'return this.method')
 echo "Method: $METHOD"
 echo "<br>"
-TARGET=$(echo $TRANS_QS | jsawk 'return this.target')
 echo "Target: $TARGET"
 echo "<br>"
 echo "Run script: rpc-func/$METHOD/$TARGET"
 echo "<br>"
 echo "---------------------------"
 echo "<br>"
+fi
 
-RET=$(/www/cgi-bin/rpc-func/$METHOD/$TARGET $TRANS_QS)
+RET=$($RPC_FUNC_PATH/$METHOD/$TARGET $TRANS_QS)
 echo $RET
