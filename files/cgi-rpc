@@ -8,13 +8,13 @@ RPC_FUNC_PATH='/usr/lib/cgi-rpc/rpc-func'
 fi
 
 TRANS_QS=$(echo $QUERY_STRING | urldecode)
-METHOD=$(echo $TRANS_QS | jsawk 'return this.method')
-TARGET=$(echo $TRANS_QS | jsawk 'return this.target')
+METHOD=$(echo $TRANS_QS | JSON.sh -l | awk '$1 == "[\"method\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+TARGET=$(echo $TRANS_QS | JSON.sh -l | awk '$1 == "[\"target\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
 
 echo "Content-type: text/html"
 echo ""
 
-if [ $DEBUG != '0' || x$DEBUG = 'x' ]; then
+if [ $DEBUG != '0' -a x$DEBUG != 'x' ]; then
 echo "--------Debug JSON---------"
 echo "<br>"
 echo "Translated query string: $TRANS_QS"

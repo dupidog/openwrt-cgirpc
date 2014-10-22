@@ -39,20 +39,24 @@ include $(INCLUDE_DIR)/package.mk
 # If you are running Kamikaze, delete the DESCRIPTION
 # variable below and uncomment the Kamikaze define
 # directive for the description below
-define Package/cgi-rpc
+define Package/$(PKG_NAME)
         SECTION:=utils
         CATEGORY:=Utilities
-        DEPENDS:=uhttpd js
+        DEPENDS:=uhttpd
         TITLE:=CGI RPC interface of router
 endef
 
 
 # Uncomment portion below for Kamikaze and delete DESCRIPTION variable above
-define Package/cgi-rpc/description
+define Package/$(PKG_NAME)/description
         Remote config interface of router over http protocol,
         transacted by CGI and formatted in JSON.
 endef
 
+
+define Package/$(PKG_NAME)/conffiles
+/etc/config/cgirpc
+endef
  
 
 # Specify what needs to be done to prepare for building the package.
@@ -85,7 +89,7 @@ endef
 #	$(INSTALL_DIR) $(1)/bin
 #	$(INSTALL_BIN) $(PKG_BUILD_DIR)/cgi-rpc $(1)/bin/
 #endef
-define Package/cgi-rpc/install
+define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/cgi-rpc
 	$(CP) ./files/rpc-func $(1)/usr/lib/cgi-rpc
 	$(INSTALL_DIR) $(1)/usr/bin
@@ -97,9 +101,9 @@ define Package/cgi-rpc/install
 endef
 
 
-define Package/cgi-rpc/postrm
-	#!/bin/sh
-	rm -rf /usr/lib/cgi-rpc
+define Package/$(PKG_NAME)/postrm
+#!/bin/sh
+rm -rf /usr/lib/cgi-rpc
 endef
 
 # This line executes the necessary commands to compile our program.
