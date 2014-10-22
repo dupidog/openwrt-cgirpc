@@ -3,7 +3,7 @@
 DEBUG=$(uci get cgirpc.debug.enabled)
 RPC_FUNC_PATH=$(uci get cgirpc.common.rpc_func_path)
 
-if [ x$RPC_FUNC_PATH = 'x' ]; then
+if [ "x$RPC_FUNC_PATH" = "x" ]; then
 RPC_FUNC_PATH='/usr/lib/cgi-rpc/rpc-func'
 fi
 
@@ -14,7 +14,7 @@ TARGET=$(echo $TRANS_QS | JSON.sh -l | awk '$1 == "[\"target\"]" {print $2}' | s
 echo "Content-type: text/html"
 echo ""
 
-if [ $DEBUG != '0' -a x$DEBUG != 'x' ]; then
+if [ "$DEBUG" != "0" -a "x$DEBUG" != "x" ]; then
 echo "--------Debug JSON---------"
 echo "<br>"
 echo "Translated query string: $TRANS_QS"
@@ -29,5 +29,5 @@ echo "---------------------------"
 echo "<br>"
 fi
 
-RET=$($RPC_FUNC_PATH/$METHOD/$TARGET $TRANS_QS)
+RET=$($RPC_FUNC_PATH/$METHOD/$TARGET $TRANS_QS $DEBUG)
 echo $RET

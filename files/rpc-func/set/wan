@@ -1,0 +1,106 @@
+#!/bin/sh
+
+WAN_IP=$(echo ${1} | JSON.sh -l | awk '$1 == "[\"ip\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$")
+WAN_MASK=$(echo ${1} | JSON.sh -l | awk '$1 == "[\"netmask\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$")
+WAN_GW=$(echo ${1} | JSON.sh -l | awk '$1 == "[\"gateway\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$")
+WAN_BC=$(echo ${1} | JSON.sh -l | awk '$1 == "[\"broadcast\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$")
+WAN_DNS=$(echo ${1} | JSON.sh | awk '$1 == "[\"dns\"]" {print $2}' | sed -e "s/\[\|\"\|\]\|\ //g;s/\,/\ /g")
+PPPOE_USER=$(echo ${1} | JSON.sh -l | awk '$1 == "[\"username\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+PPPOE_PASS=$(echo ${1} | JSON.sh -l | awk '$1 == "[\"password\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+PPPOE_AC=$(echo ${1} | JSON.sh -l | awk '$1 == "[\"ac\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+PPPOE_SERVICE=$(echo ${1} | JSON.sh -l | awk '$1 == "[\"service\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+PROTOCOL=$(echo ${1} | JSON.sh -l | awk '$1 == "[\"protocol\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+
+
+if [ "$PROTOCOL" = "dhcp" ]; then
+# WAN: DHCP
+
+    uci set network.wan.proto="dhcp"
+    uci delete network.wan._orig_ifname
+    uci delete network.wan._orig_bridge
+    uci delete network.wan.ipaddr
+    uci delete network.wan.netmask
+    uci delete network.wan.gateway
+    uci delete network.wan.broadcast
+    uci delete network.wan.dns
+    uci delete network.wan.username
+    uci delete network.wan.password
+    uci delete network.wan.ac
+    uci delete network.wan.service
+    RET_INFO="\"protocol\":\"dhcp\""
+
+elif [ "$PROTOCOL" = "static" ]; then
+# WAN: Static IP
+
+    if [ "x$WAN_IP" != "x" -a "x$WAN_MASK" != "x" ]; then
+        uci delete network.wan._orig_ifname
+        uci delete network.wan._orig_bridge
+        uci delete network.wan.username
+        uci delete network.wan.password
+        uci delete network.wan.ac
+        uci delete network.wan.service
+        uci set network.wan.proto="static"
+        uci set network.wan.ipaddr="$WAN_IP"
+        uci set network.wan.netmask="$WAN_MASK"
+        if [ "x$WAN_GW" != "x" ]; then
+            uci set network.wan.gateway="$WAN_GW"
+        else
+            uci delete network.wan.gateway
+        fi
+        if [ "x$WAN_BC" != "x" ]; then
+            uci set network.wan.broadcast="$WAN_BC"
+        else
+            uci delete network.wan.broadcast
+        fi
+        if [ "x$WAN_DNS" != "x" ]; then
+            uci set network.wan.dns="$WAN_DNS"
+        else
+            uci delete network.wan.dns
+        fi
+        RET_INFO="\"protocol\":\"static\""
+    else
+        echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"wan ip or mask missing\"}"
+        exit 2;
+    fi
+
+elif [ "$PROTOCOL" = "pppoe" ]; then
+# WAN: PPPOE
+
+    if [ "x$PPPOE_USER" != "x" -a "x$PPPOE_PASS" != "x" ]; then
+        uci delete network.wan._orig_ifname
+        uci delete network.wan._orig_bridge
+        uci delete network.wan.ipaddr
+        uci delete network.wan.netmask
+        uci delete network.wan.gateway
+        uci delete network.wan.broadcast
+        uci delete network.wan.dns
+        uci set network.wan.proto="pppoe"
+        uci set network.wan.username="$PPPOE_USER"
+        uci set network.wan.password="$PPPOE_PASS"
+        if [ "x$PPPOE_AC" != "x" ]; then
+            uci set network.wan.ac="$PPPOE_AC"
+        else
+            uci delete network.wan.ac
+        fi
+        if [ "x$PPPOE_SERVICE" != "x" ]; then
+            uci set network.wan.service="$PPPOE_SERVICE"
+        else
+            uci delete network.wan.broadcast
+        fi
+        RET_INFO="\"protocol\":\"pppoe\""
+    else
+        echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"wan ip or mask missing\"}"
+        exit 2;
+    fi
+
+else
+
+    echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"protocol err\"}"
+    exit 1;
+
+fi
+
+uci commit network
+if [ "$2" = "0" -o "x$2" = "x" ]; then /etc/init.d/network restart; fi
+
+echo "{\"ret\":\"OK\",$RET_INFO}"

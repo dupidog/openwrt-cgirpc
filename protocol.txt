@@ -3,11 +3,14 @@ QRERY
 2.获得系统参数  {"method":"query","target":sys}
 
 SET
-1.设置WAN       {"method":"set","target":wan,"protocol":"static"","ip":IP,"netmask":NETMASK,"gateway":GATEWAY,"dns":[DNS1,...]} //static ip
-                {"method":"set","target":wan,"protocol":dhcp} //dhcp
-                {"method":"set","target":wan,"protocol":pppoe,"username":USERNAME,"password":PASSWORD} //pppoe
+1.设置WAN       {"method":"set","target":wan,"protocol":"static"","ip":IP,
+			"netmask":NETMASK,"gateway":GATEWAY,"broadcast":BROADCAST,
+			"dns":[DNS1,...]} //static ip
+                {"method":"set","target":wan,"protocol":dhcp} 		//dhcp
+                {"method":"set","target":wan,"protocol":pppoe,"username":USERNAME,
+			"password":PASSWORD,"ac":AC,"service",SERVICE} 	//pppoe
 2.设置WLAN      {"method":"set","target":wlan0|wlan1,"enabled":true|false} // wlan1 maybe the 802.11ac adapter
-                {"method":"set","target":wlan0|wlan1,"channel":CHANNEL} // set the wireless channel
+                {"method":"set","target":wlan0|wlan1,"channel":CHANNEL}	// set the wireless channel
                 {"method":"set","target":wlan0|wlan1,"encryption":ENCRYPTION,"ssid":SSID,"key":KEY} // set the wireless authorization
 3.设置LAN       {"method":"set","target":lan,"ip":IP,"netmask":NETMASK}
 4.设置DHCP      {"method":"set","target":dhcp,"enabled":true|false}
