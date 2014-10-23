@@ -7,9 +7,9 @@ if [ "x$RPC_FUNC_PATH" = "x" ]; then
 RPC_FUNC_PATH='/usr/lib/cgi-rpc/rpc-func'
 fi
 
-TRANS_QS=$(echo $QUERY_STRING | urldecode)
-METHOD=$(echo $TRANS_QS | JSON.sh -l | awk '$1 == "[\"method\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
-TARGET=$(echo $TRANS_QS | JSON.sh -l | awk '$1 == "[\"target\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+TRANS_QS=$(echo $QUERY_STRING | urldecode | JSON.sh)
+METHOD=$(echo "$TRANS_QS" | awk '$1 == "[\"method\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+TARGET=$(echo "$TRANS_QS" | awk '$1 == "[\"target\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
 
 echo "Content-type: text/html"
 echo ""
@@ -29,5 +29,5 @@ echo "---------------------------"
 echo "<br>"
 fi
 
-RET=$($RPC_FUNC_PATH/$METHOD/$TARGET $TRANS_QS $DEBUG)
+RET=$($RPC_FUNC_PATH/$METHOD/$TARGET "$TRANS_QS" $DEBUG)
 echo $RET
