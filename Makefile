@@ -42,7 +42,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/$(PKG_NAME)
         SECTION:=utils
         CATEGORY:=Utilities
-        DEPENDS:=uhttpd
+        DEPENDS:=+uhttpd +jshn +netifd
         TITLE:=CGI RPC interface of router
 endef
 

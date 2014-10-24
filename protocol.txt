@@ -1,6 +1,7 @@
 QRERY
-1.Net status    {"method":"query","target":"net"}
-2.Sys status    {"method":"query","target":"sys"}
+1.Sys status    {"method":"get","target":"sys"}
+2.Wan status    {"method":"get","target":"wan"}
+3.Lan status    {"method":"get","target":"lan"}
 
 SET
 1.WAN           {"method":"set","target":"wan","protocol":"static"","ip":IP,

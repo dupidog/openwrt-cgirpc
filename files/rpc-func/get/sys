@@ -1,0 +1,26 @@
+#!/bin/sh
+
+. /usr/share/libubox/jshn.sh
+
+json_init
+
+json_add_string "hostname" "$(uci get system.@system[0].hostname)"
+json_add_string "zonename" "$(uci get system.@system[0].zonename)"
+json_add_string "timezone" "$(uci get system.@system[0].timezone)"
+json_add_string "local_time" "$(date)"
+json_add_string "uptime" "$(cat /proc/uptime | awk '{print $1}')"
+
+json_add_string "kernel_ver" "$(uname -r)"
+json_add_string "firmware_ver" "$(cat /etc/openwrt_release | awk -F '=' '$1 == "DISTRIB_DESCRIPTION" { print $2}' | sed -e "s/\"//g")"
+
+TOP_BUF=$(top -b -n 1)
+MEM_LINE=$(echo "$TOP_BUF" | grep ^Mem: | sed -e "s/K\|k//g")
+json_add_string "mem_total" "$(echo "$MEM_LINE" | awk '{print $2+$4}')"
+json_add_string "mem_used" "$(echo "$MEM_LINE" | awk '{print $2}')"
+json_add_string "mem_free" "$(echo "$MEM_LINE" | awk '{print $4}')"
+json_add_string "mem_shared" "$(echo "$MEM_LINE" | awk '{print $6}')"
+json_add_string "mem_buff" "$(echo "$MEM_LINE" | awk '{print $8}')"
+json_add_string "mem_cached" "$(echo "$MEM_LINE" | awk '{print $10}')"
+json_add_string "load_average" "$(echo "$TOP_BUF" | grep '^Load\ average:' | awk '{print $3" "$4" "$5}')"
+
+echo $(json_dump)
