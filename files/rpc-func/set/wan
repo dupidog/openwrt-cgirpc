@@ -11,6 +11,7 @@ PPPOE_AC=$(echo "${1}" | awk '$1 == "[\"ac\"]" {print $2}' | sed -e "s/\"\|\[\|\
 PPPOE_SERVICE=$(echo "${1}" | awk '$1 == "[\"service\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
 PROTOCOL=$(echo "${1}" | awk '$1 == "[\"protocol\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
 
+RET_INFO=""
 
 if [ "$PROTOCOL" = "dhcp" ]; then
 # WAN: DHCP
@@ -27,7 +28,7 @@ if [ "$PROTOCOL" = "dhcp" ]; then
     uci delete network.wan.password
     uci delete network.wan.ac
     uci delete network.wan.service
-    RET_INFO="\"protocol\":\"dhcp\""
+    RET_INFO="$RET_INFO,\"protocol\":\"dhcp\""
 
 elif [ "$PROTOCOL" = "static" ]; then
 # WAN: Static IP
@@ -57,7 +58,7 @@ elif [ "$PROTOCOL" = "static" ]; then
         else
             uci delete network.wan.dns
         fi
-        RET_INFO="\"protocol\":\"static\""
+        RET_INFO="$RET_INFO,\"protocol\":\"static\""
     else
         echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"wan ip or mask missing\"}"
         exit 2;
@@ -87,9 +88,9 @@ elif [ "$PROTOCOL" = "pppoe" ]; then
         else
             uci delete network.wan.broadcast
         fi
-        RET_INFO="\"protocol\":\"pppoe\""
+        RET_INFO="$RET_INFO,\"protocol\":\"pppoe\""
     else
-        echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"wan ip or mask missing\"}"
+        echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"pppoe user or pass missing\"}"
         exit 2;
     fi
 
@@ -101,6 +102,11 @@ else
 fi
 
 uci commit network
+
 if [ "$2" = "0" -o "x$2" = "x" ]; then /etc/init.d/network restart; fi
 
-echo "{\"ret\":\"OK\",$RET_INFO}"
+if [ "x$RET_INFO" != "x" ]; then
+    echo "{\"ret\":\"OK\"$RET_INFO}"
+else
+    echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
+fi

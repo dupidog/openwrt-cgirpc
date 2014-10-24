@@ -7,29 +7,16 @@ WLAN_ENCRYPTION=$(echo "${1}" | awk '$1 == "[\"encryption\"]" {print $2}' | sed 
 WLAN_SSID=$(echo "${1}" | awk '$1 == "[\"ssid\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
 WLAN_KEY=$(echo "${1}" | awk '$1 == "[\"key\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
 
+RET_INFO=""
+
 # default wlan device
 if [ "x$WLAN_DEVICE" = "x" ]; then WLAN_DEVICE="radio0"; fi
-RET_INFO="\"device\":\"$WLAN_DEVICE\""
+RET_INFO="$RET_INFO,\"device\":\"$WLAN_DEVICE\""
 
 # check wlan device
 if [ "x`uci get wireless.$WLAN_DEVICE`" = "x" ]; then
     echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"invalid wlan device\"}"
     exit 1;
-fi
-
-# enable/disable wlan device
-if [ "$WLAN_ENABLED" = "0" ]; then
-    uci set wireless.$WLAN_DEVICE.disabled="1"
-    RET_INFO="$RET_INFO,\"enabled\":\"0\""
-elif [ "x$WLAN_ENABLED" = "x" ]; then
-    uci set wireless.$WLAN_DEVICE.disabled="0"
-    RET_INFO="$RET_INFO,\"enabled\":\"1\""
-fi 
-
-# set channel
-if [ "x$WLAN_CHANNEL" != "x" ]; then
-    uci set wireless.$WLAN_DEVICE.channel="$WLAN_CHANNEL"
-    RET_INFO="$RET_INFO,\"channel\":\"$WLAN_CHANNEL\""
 fi
 
 # search/match wifi-iface
@@ -49,6 +36,20 @@ if [ $ifnum = -1 ]; then
     exit 2;
 fi
 
+# enable/disable wlan device
+if [ "$WLAN_ENABLED" = "0" ]; then
+    uci set wireless.$WLAN_DEVICE.disabled="1"
+    RET_INFO="$RET_INFO,\"enabled\":\"0\""
+elif [ "x$WLAN_ENABLED" != "x" ]; then
+    uci set wireless.$WLAN_DEVICE.disabled="0"
+    RET_INFO="$RET_INFO,\"enabled\":\"1\""
+fi 
+
+# set channel
+if [ "x$WLAN_CHANNEL" != "x" ]; then
+    uci set wireless.$WLAN_DEVICE.channel="$WLAN_CHANNEL"
+    RET_INFO="$RET_INFO,\"channel\":\"$WLAN_CHANNEL\""
+fi
 
 # set encryption
 if [ "x$WLAN_ENCRYPTION" != "x" ]; then
@@ -109,4 +110,8 @@ uci commit wireless
 
 if [ "$2" = "0" -o "x$2" = "x" ]; then wifi; fi
 
-echo "{\"ret\":\"OK\",$RET_INFO}"
+if [ "x$RET_INFO" != "x" ]; then
+    echo "{\"ret\":\"OK\"$RET_INFO}"
+else
+    echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
+fi
