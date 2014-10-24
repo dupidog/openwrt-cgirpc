@@ -1,0 +1,44 @@
+#!/bin/sh
+
+DHCP_ENABLED=$(echo "${1}" | awk '$1 == "[\"enabled\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+START_IP=$(echo "${1}" | awk '$1 == "[\"start\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]*$")
+LIMIT_IP=$(echo "${1}" | awk '$1 == "[\"limit\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]*$")
+LEASE_TIME=$(echo "${1}" | awk '$1 == "[\"leasetime\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]*h$")
+
+RET_INFO=""
+
+# enable/disable lan dhcp
+if [ "$DHCP_ENABLED" = "0" ]; then
+    uci set dhcp.lan.ignore="1"
+    RET_INFO="$RET_INFO,\"enabled\":\"0\""
+elif [ "x$DHCP_ENABLED" != "x" ]; then
+    uci set dhcp.lan.ignore="0"
+    RET_INFO="$RET_INFO,\"enabled\":\"1\""
+fi 
+
+# set start/limit ip
+
+if [ "x$START_IP" != "x" -a "x$LIMIT_IP" != "x" ]; then
+
+    uci set dhcp.lan.start="$START_IP"
+    uci set dhcp.lan.limit="$LIMIT_IP"
+
+    RET_INFO="$RET_INFO,\"start\":\"$START_IP\",\"limit\":\"$LIMIT_IP\""
+
+fi
+
+# set leasetime
+if [ "x$LEASE_TIME" != "x" ]; then
+    uci set dhcp.lan.leasetime="$LEASE_TIME"
+    RET_INFO="$RET_INFO,\"leasetime\":\"$LEASE_TIME\""
+fi
+
+uci commit dhcp
+
+if [ "$2" = "0" -o "x$2" = "x" ]; then /etc/init.d/network restart; fi
+
+if [ "x$RET_INFO" != "x" ]; then
+    echo "{\"ret\":\"OK\"$RET_INFO}"
+else
+    echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
+fi
