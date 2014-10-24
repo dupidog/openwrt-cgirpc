@@ -11,22 +11,16 @@ TRANS_QS=$(echo $QUERY_STRING | urldecode | JSON.sh)
 METHOD=$(echo "$TRANS_QS" | awk '$1 == "[\"method\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
 TARGET=$(echo "$TRANS_QS" | awk '$1 == "[\"target\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
 
-echo "Content-type: text/html"
+echo "Content-type: text/json"
 echo ""
 
 if [ "$DEBUG" != "0" -a "x$DEBUG" != "x" ]; then
 echo "--------Debug JSON---------"
-echo "<br>"
 echo "Translated query string: $TRANS_QS"
-echo "<br>"
 echo "Method: $METHOD"
-echo "<br>"
 echo "Target: $TARGET"
-echo "<br>"
 echo "Run script: rpc-func/$METHOD/$TARGET"
-echo "<br>"
 echo "---------------------------"
-echo "<br>"
 fi
 
 RET=$($RPC_FUNC_PATH/$METHOD/$TARGET "$TRANS_QS" $DEBUG)
