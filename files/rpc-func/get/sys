@@ -1,7 +1,3 @@
-#!/bin/sh
-
-. /usr/share/libubox/jshn.sh
-
 json_init
 
 json_add_string "hostname" "$(uci get system.@system[0].hostname)"
@@ -23,4 +19,4 @@ json_add_string "mem_buff" "$(echo "$MEM_LINE" | awk '{print $8}')"
 json_add_string "mem_cached" "$(echo "$MEM_LINE" | awk '{print $10}')"
 json_add_string "load_average" "$(echo "$TOP_BUF" | grep '^Load\ average:' | awk '{print $3" "$4" "$5}')"
 
-echo $(json_dump)
+json_dump

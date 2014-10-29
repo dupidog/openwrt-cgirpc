@@ -1,5 +1,2 @@
-#!/bin/sh
-
-reboot
-
 echo "{\"ret\":\"OK\"}"
+reboot

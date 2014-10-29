@@ -1,5 +1,2 @@
-#!/bin/sh
-
-wifi
-
 echo "{\"ret\":\"OK\"}"
+wifi

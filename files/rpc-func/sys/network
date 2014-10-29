@@ -1,5 +1,2 @@
-#!/bin/sh
-
-/etc/init.d/network restart
-
 echo "{\"ret\":\"OK\"}"
+/etc/init.d/network restart

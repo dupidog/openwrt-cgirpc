@@ -1,5 +1,7 @@
 #!/bin/sh 
 
+. /usr/share/libubox/jshn.sh
+
 DEBUG=$(uci get cgirpc.debug.enabled)
 RPC_FUNC_PATH=$(uci get cgirpc.common.rpc_func_path)
 
@@ -7,9 +9,10 @@ if [ "x$RPC_FUNC_PATH" = "x" ]; then
 RPC_FUNC_PATH='/usr/lib/cgi-rpc/rpc-func'
 fi
 
-TRANS_QS=$(echo $QUERY_STRING | urldecode | JSON.sh)
-METHOD=$(echo "$TRANS_QS" | awk '$1 == "[\"method\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
-TARGET=$(echo "$TRANS_QS" | awk '$1 == "[\"target\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+json_load $(echo $QUERY_STRING | urldecode)
+
+json_get_var METHOD "method"
+json_get_var TARGET "target"
 
 echo "Content-type: text/json"
 echo ""
@@ -23,5 +26,4 @@ echo "Run script: rpc-func/$METHOD/$TARGET"
 echo "---------------------------"
 fi
 
-RET=$($RPC_FUNC_PATH/$METHOD/$TARGET "$TRANS_QS" $DEBUG)
-echo $RET
+. $RPC_FUNC_PATH/$METHOD/$TARGET $DEBUG

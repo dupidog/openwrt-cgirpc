@@ -1,6 +1,3 @@
-#!/bin/sh
-
 rm -rf /overlay/*
-reboot
-
 echo "{\"ret\":\"OK\"}"
+reboot

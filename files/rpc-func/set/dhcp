@@ -1,9 +1,11 @@
-#!/bin/sh
+json_get_var DHCP_ENABLED "enabled"
+json_get_var START_IP "start"
+json_get_var LIMIT_IP "limit"
+json_get_var LEASE_TIME "leasetime"
 
-DHCP_ENABLED=$(echo "${1}" | awk '$1 == "[\"enabled\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
-START_IP=$(echo "${1}" | awk '$1 == "[\"start\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]*$")
-LIMIT_IP=$(echo "${1}" | awk '$1 == "[\"limit\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]*$")
-LEASE_TIME=$(echo "${1}" | awk '$1 == "[\"leasetime\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep "^[0-9]*h$")
+START_IP=$(echo $START_IP | grep "^[0-9]*$")
+LIMIT_IP=$(echo $LIMIT_IP | grep "^[0-9]*$")
+LEASE_TIME=$(echo $LEASE_TIME | grep "^[0-9]*h$")
 
 RET_INFO=""
 
@@ -35,10 +37,10 @@ fi
 
 uci commit dhcp
 
-if [ "$2" = "0" -o "x$2" = "x" ]; then /etc/init.d/network restart; fi
-
 if [ "x$RET_INFO" != "x" ]; then
     echo "{\"ret\":\"OK\"$RET_INFO}"
 else
     echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
 fi
+
+if [ "$1" = "0" -o "x$1" = "x" ]; then /etc/init.d/network restart; fi

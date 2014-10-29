@@ -1,11 +1,12 @@
-#!/bin/sh
+json_get_var WLAN_DEVICE "device"
+json_get_var WLAN_ENABLED "enabled"
+json_get_var WLAN_CHANNEL "channel"
+json_get_var WLAN_ENCRYPTION "encryption"
+json_get_var WLAN_SSID "ssid"
+json_get_var WLAN_KEY "key"
 
-WLAN_DEVICE=$(echo "${1}" | awk '$1 == "[\"device\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
-WLAN_ENABLED=$(echo "${1}" | awk '$1 == "[\"enabled\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
-WLAN_CHANNEL=$(echo "${1}" | awk '$1 == "[\"channel\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g" | grep ^[0-9]*$)
-WLAN_ENCRYPTION=$(echo "${1}" | awk '$1 == "[\"encryption\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
-WLAN_SSID=$(echo "${1}" | awk '$1 == "[\"ssid\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
-WLAN_KEY=$(echo "${1}" | awk '$1 == "[\"key\"]" {print $2}' | sed -e "s/\"\|\[\|\]//g")
+WLAN_CHANNEL=$(echo $WLAN_CHANNEL | grep ^[0-9]*$)
+if [ "x$(echo $WLAN_KEY | grep '^JSON_ARRAY')" != "x" ]; then json_get_values WLAN_KEY "key"; fi
 
 RET_INFO=""
 
@@ -85,20 +86,16 @@ if [ "x$WLAN_KEY" != "x" ]; then
     uci delete wireless.@wifi-iface[$ifnum].key3
     uci delete wireless.@wifi-iface[$ifnum].key4
     if [ "$WLAN_ENCRYPTION" = "wep-open" -o "$WLAN_ENCRYPTION" = "wep-shared" ]; then
-        if [ "`echo $KEY | awk -F ',' '{print NF}'`" = '1' ]; then
+        if [ "$(echo $KEY | awk '{print NF}')" = '1' ]; then
             uci set wireless.@wifi-iface[$ifnum].key="1"
             uci set wireless.@wifi-iface[$ifnum].key1="s:$WLAN_KEY"
         else
-            KEY_NUM="$(echo $WLAN_KEY | awk -F ',' '$1~/^[1-4]$/ {print $1}')"
-            if [ "x$KEY_NUM" != "x" ]; then
-                uci set wireless.@wifi-iface[$ifnum].key="$KEY_NUM"
-            else
-                uci set wireless.@wifi-iface[$ifnum].key="1"
-            fi
-            uci set wireless.@wifi-iface[$ifnum].key1="$(echo $WLAN_KEY | awk -F ',' '$2!~/^$/ {print "s:"$2}')"
-            uci set wireless.@wifi-iface[$ifnum].key2="$(echo $WLAN_KEY | awk -F ',' '$3!~/^$/ {print "s:"$3}')"
-            uci set wireless.@wifi-iface[$ifnum].key3="$(echo $WLAN_KEY | awk -F ',' '$4!~/^$/ {print "s:"$4}')"
-            uci set wireless.@wifi-iface[$ifnum].key4="$(echo $WLAN_KEY | awk -F ',' '$5!~/^$/ {print "s:"$5}')"
+            KEY_NUM="$(echo $WLAN_KEY | awk '$1~/^[1-4]$/ {print $1}')"
+            uci set wireless.@wifi-iface[$ifnum].key="${KEY_NUM:-1}"
+            uci set wireless.@wifi-iface[$ifnum].key1="$(echo $WLAN_KEY | awk '$2!~/^$/ {print "s:"$2}')"
+            uci set wireless.@wifi-iface[$ifnum].key2="$(echo $WLAN_KEY | awk '$3!~/^$/ {print "s:"$3}')"
+            uci set wireless.@wifi-iface[$ifnum].key3="$(echo $WLAN_KEY | awk '$4!~/^$/ {print "s:"$4}')"
+            uci set wireless.@wifi-iface[$ifnum].key4="$(echo $WLAN_KEY | awk '$5!~/^$/ {print "s:"$5}')"
         fi
     else
         uci set wireless.@wifi-iface[$ifnum].key="$WLAN_KEY"
@@ -108,10 +105,10 @@ fi
 
 uci commit wireless
 
-if [ "$2" = "0" -o "x$2" = "x" ]; then wifi; fi
-
 if [ "x$RET_INFO" != "x" ]; then
     echo "{\"ret\":\"OK\"$RET_INFO}"
 else
     echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
 fi
+
+if [ "$1" = "0" -o "x$1" = "x" ]; then wifi; fi
