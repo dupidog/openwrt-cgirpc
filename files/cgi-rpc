@@ -3,13 +3,18 @@
 . /usr/share/libubox/jshn.sh
 
 DEBUG=$(uci get cgirpc.debug.enabled)
-RPC_FUNC_PATH=$(uci get cgirpc.common.rpc_func_path)
 
+RPC_FUNC_PATH=$(uci get cgirpc.common.rpc_func_path)
 if [ "x$RPC_FUNC_PATH" = "x" ]; then
 RPC_FUNC_PATH='/usr/lib/cgi-rpc/rpc-func'
 fi
 
-json_load $(echo $QUERY_STRING | urldecode)
+COMMON_FUNC_PATH=$(uci get cgirpc.common.common_func_path)
+if [ "x$COMMON_FUNC_PATH" = "x" ]; then
+COMMON_FUNC_PATH='/usr/bin'
+fi
+
+json_load $(echo $QUERY_STRING | $COMMON_FUNC_PATH/urldecode)
 
 json_get_var METHOD "method"
 json_get_var TARGET "target"
