@@ -23,12 +23,12 @@ echo "Content-type: text/json"
 echo ""
 
 if [ "$DEBUG" != "0" -a "x$DEBUG" != "x" ]; then
-echo "--------Debug JSON---------"
+echo "+-+-------Debug JSON--------+-+"
 echo "Translated query string: $TRANS_QS"
 echo "Method: $METHOD"
 echo "Target: $TARGET"
 echo "Run script: rpc-func/$METHOD/$TARGET"
-echo "---------------------------"
+echo "+-+-------------------------+-+"
 fi
 
 . $RPC_FUNC_PATH/$METHOD/$TARGET $DEBUG
