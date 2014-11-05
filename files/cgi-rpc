@@ -14,7 +14,11 @@ if [ "x$COMMON_FUNC_PATH" = "x" ]; then
 COMMON_FUNC_PATH='/usr/bin'
 fi
 
-json_load $(echo $QUERY_STRING | $COMMON_FUNC_PATH/urldecode)
+if [ "$REQUEST_METHOD" = "POST" ]; then
+QUERY_STRING=$(cat -)
+fi
+
+json_load $(echo $QUERY_STRING | sed 's/^rpc=//g' | $COMMON_FUNC_PATH/urldecode)
 
 json_get_var METHOD "method"
 json_get_var TARGET "target"
@@ -24,7 +28,7 @@ echo ""
 
 if [ "$DEBUG" != "0" -a "x$DEBUG" != "x" ]; then
 echo "+-+-------Debug JSON--------+-+"
-echo "Translated query string: $TRANS_QS"
+echo "Translated query string: $QUERY_STRING"
 echo "Method: $METHOD"
 echo "Target: $TARGET"
 echo "Run script: rpc-func/$METHOD/$TARGET"
