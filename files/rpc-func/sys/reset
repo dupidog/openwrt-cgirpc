@@ -1,3 +1,5 @@
+# Reset script
+
 rm -rf /overlay/*
 echo "{\"ret\":\"OK\"}"
 reboot

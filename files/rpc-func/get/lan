@@ -1,1 +1,3 @@
+# LAN status get script
+
 ifstatus lan

@@ -1,2 +1,4 @@
+# Network restart script
+
 echo "{\"ret\":\"OK\"}"
 /etc/init.d/network restart

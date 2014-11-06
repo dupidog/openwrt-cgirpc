@@ -1,3 +1,5 @@
+# WAN set script
+
 json_get_var WAN_IP "ip"
 json_get_var WAN_MASK "netmask"
 json_get_var WAN_GW "gateway"

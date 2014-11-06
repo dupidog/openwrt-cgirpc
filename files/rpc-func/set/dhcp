@@ -1,3 +1,5 @@
+# DHCP set script
+
 json_get_var DHCP_ENABLED "enabled"
 json_get_var START_IP "start"
 json_get_var LIMIT_IP "limit"

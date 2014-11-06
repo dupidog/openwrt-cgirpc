@@ -1,2 +1,4 @@
+# WIFI restart script
+
 echo "{\"ret\":\"OK\"}"
 wifi

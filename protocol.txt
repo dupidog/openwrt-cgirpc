@@ -2,17 +2,18 @@ QRERY
 1.Sys status    {"method":"get","target":"sys"}
 2.Wan status    {"method":"get","target":"wan"}
 3.Lan status    {"method":"get","target":"lan"}
+4.AP scan	{"method":"get","target":"apscan","device":DEVICE}
 
 SET
 1.WAN           {"method":"set","target":"wan","protocol":"static"","ip":IP,
                         "netmask":NETMASK,"gateway":GATEWAY,"broadcast":BROADCAST,
                         "dns":[DNS1,...]}
-                {"method":"set","target":"wan","protocol":dhcp}
-                {"method":"set","target":"wan","protocol":pppoe,"username":USERNAME,
+                {"method":"set","target":"wan","protocol":"dhcp"}
+                {"method":"set","target":"wan","protocol":"pppoe","username":USERNAME,
                         "password":PASSWORD,"ac":AC,"service",SERVICE}
-2.WLAN          {"method":"set","target":"wlan","enabled":"0|1"}
-                {"method":"set","target":"wlan","channel":CHANNEL}
-                {"method":"set","target":"wlan","encryption":"none|wep-open|wep-shared|psk|psk2|psk-mixed",
+2.WLAN          {"method":"set","target":"wlan","device":DEVICE,"enabled":"0|1"}
+                {"method":"set","target":"wlan","device":DEVICE,"channel":CHANNEL}
+                {"method":"set","target":"wlan","device":DEVICE,"encryption":"none|wep-open|wep-shared|psk|psk2|psk-mixed",
                         "ssid":SSID,"key":KEY|[KEY-NO,KEY1,KEY2,KEY3,KEY4]} 
 3.LAN           {"method":"set","target":"lan","ip":IP,"netmask":NETMASK}
 4.DHCP          {"method":"set","target":"dhcp","enabled":"0|1"}

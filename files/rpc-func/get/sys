@@ -1,3 +1,5 @@
+# System status get script
+
 json_init
 
 json_add_string "hostname" "$(uci get system.@system[0].hostname)"

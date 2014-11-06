@@ -1,2 +1,4 @@
+# Reboot script
+
 echo "{\"ret\":\"OK\"}"
 reboot

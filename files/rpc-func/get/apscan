@@ -1,0 +1,44 @@
+# AP scan script
+
+json_get_var WLAN_DEVICE "device"
+
+# default wlan device
+if [ "x$WLAN_DEVICE" = "x" ]; then WLAN_DEVICE="ra0"; fi
+
+# run iwinfo command
+IWINFO_RET=$(iwinfo $WLAN_DEVICE scan)
+
+json_init
+
+# check iwinfo return
+if [ "${IWINFO_RET:0:4}" != "Cell" ]; then
+    json_add_string "ret" "ERROR"
+    json_add_string "reason" "unknown"
+    json_dump
+    exit 1;
+fi
+
+json_add_string "device" "$WLAN_DEVICE"
+json_add_array "scandata"
+
+eval "$(echo "$IWINFO_RET" | awk '
+    $1=="Cell" { if($2!="01") print "json_close_object"
+        print "json_add_object \""$2"\""
+        print "json_add_string \"id\" \""$2"\""
+        print "json_add_string \"address\" \""$5"\""}
+    $1=="ESSID:" {printf "json_add_string \"essid\" "
+        for(i=2;i<=NF-1;i++) printf $i" "
+        printf $NF"\n" }
+    $1=="Mode:" {print "json_add_string \"mode\" \""$2"\""
+        print "json_add_string \"channel\" \""$4"\""}
+    $1=="Signal:" {print "json_add_string \"signal\" \""$2"\""
+         split($5,str,"\/")
+         print "json_add_string \"quality\" \""str[1]"\""}
+    $1=="Encryption:" {printf "json_add_string \"encrypt\" \""
+        for(i=2;i<=NF-1;i++) printf $i" "
+        printf $NF"\"\n"}
+')"
+
+json_close_object
+json_close_array
+json_dump
