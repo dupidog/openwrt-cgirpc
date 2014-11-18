@@ -13,7 +13,7 @@ if [ "x$(echo $WLAN_KEY | grep '^JSON_ARRAY')" != "x" ]; then json_get_values WL
 RET_INFO=""
 
 # default wlan device
-if [ "x$WLAN_DEVICE" = "x" ]; then WLAN_DEVICE="ra0"; fi
+if [ "x$WLAN_DEVICE" = "x" ]; then WLAN_DEVICE="radio0"; fi
 RET_INFO="$RET_INFO,\"device\":\"$WLAN_DEVICE\""
 
 # check wlan device

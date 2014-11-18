@@ -3,7 +3,7 @@
 json_get_var WLAN_DEVICE "device"
 
 # default wlan device
-if [ "x$WLAN_DEVICE" = "x" ]; then WLAN_DEVICE="ra0"; fi
+if [ "x$WLAN_DEVICE" = "x" ]; then WLAN_DEVICE="wlan0"; fi
 
 # run iwinfo command
 IWINFO_RET=$(iwinfo $WLAN_DEVICE scan)
