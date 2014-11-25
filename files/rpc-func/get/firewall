@@ -1,0 +1,56 @@
+# Firewall status get script
+
+json_init
+
+json_add_object "defaults"
+json_add_string "syn_flood" "$(uci get firewall.@defaults[0].syn_flood)"
+json_add_string "drop_invalid" "$(uci get firewall.@defaults[0].drop_invalid)"
+json_close_object
+
+json_add_array "redirect"
+
+cnt=0
+while [ "x$(uci get firewall.@redirect[$cnt] 2>&1 1>/dev/null)" = "x" ]
+do
+    json_add_object "$cnt"
+    json_add_string "name" "$(uci get firewall.@redirect[$cnt].name)"
+    json_add_string "target" "$(uci get firewall.@redirect[$cnt].target)"
+    enabled="$(uci get firewall.@redirect[$cnt].enabled)"
+    json_add_string "enabled" "${enabled:-1}"
+    json_add_string "src" "$(uci get firewall.@redirect[$cnt].src)"
+    json_add_string "dest" "$(uci get firewall.@redirect[$cnt].dest)"
+    json_add_string "src_dport" "$(uci get firewall.@redirect[$cnt].src_dport)"
+    json_add_string "dest_ip" "$(uci get firewall.@redirect[$cnt].dest_ip)"
+    json_add_string "dest_dport" "$(uci get firewall.@redirect[$cnt].dest_dport)"
+    json_add_string "proto" "$(uci get firewall.@redirect[$cnt].proto)"
+    json_close_object
+    cnt=$(($cnt+1))
+done
+
+json_close_array
+
+json_add_array "rule"
+
+cnt=0
+while [ "x$(uci get firewall.@rule[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+    json_add_object "$cnt"
+    json_add_string "name" "$(uci get firewall.@rule[$cnt].name)"
+    json_add_string "target" "$(uci get firewall.@rule[$cnt].target)"
+    enabled= "$(uci get firewall.@rule[$cnt].enabled)"
+    json_add_string "enabled" "${enabled:-1}"
+    json_add_string "src" "$(uci get firewall.@rule[$cnt].src)"
+    json_add_string "dest_port" "$(uci get firewall.@rule[$cnt].dest_port)"
+    json_add_array "icmp_type"
+    for element in $(uci get firewall.@rule[$cnt].icmp_type); do
+        json_add_string "$element" "$element"
+    done
+    json_close_array
+    json_add_string "proto" "$(uci get firewall.@rule[$cnt].proto)"
+    json_add_string "family" "$(uci get firewall.@rule[$cnt].family)"
+    json_close_object
+    cnt=$(($cnt+1))
+done
+
+json_close_array
+
+json_dump
