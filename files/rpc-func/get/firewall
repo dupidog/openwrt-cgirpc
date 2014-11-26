@@ -2,11 +2,58 @@
 
 json_init
 
-json_add_object "defaults"
-json_add_string "syn_flood" "$(uci get firewall.@defaults[0].syn_flood)"
-json_add_string "drop_invalid" "$(uci get firewall.@defaults[0].drop_invalid)"
+# General setting
+json_add_object "general"
+enabled="$(uci get firewall.@defaults[0].syn_flood)"
+json_add_string "syn_flood" "${enabled:-1}"
+enabled="$(uci get firewall.@defaults[0].drop_invalid)"
+json_add_string "drop_invalid" "${enabled:-0}" 
 json_close_object
 
+# Zone policy
+json_add_object "zone"
+
+# Default policy
+json_add_object "default"
+json_add_string "input" "$(uci get firewall.@defaults[0].input)"
+json_add_string "output" "$(uci get firewall.@defaults[0].output)"
+json_add_string "forward" "$(uci get firewall.@defaults[0].forward)"
+json_close_object
+
+# LAN policy
+json_add_object "lan"
+cnt=0
+scnt=-1
+while [ "x$(uci get firewall.@zone[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+    [ "$(uci get firewall.@zone[$cnt].name)" = "lan" ] && scnt=$cnt
+    cnt=$(($cnt+1))
+done
+if [ "$scnt" != "-1" ]; then
+    json_add_string "input" "$(uci get firewall.@zone[$scnt].input)"
+    json_add_string "output" "$(uci get firewall.@zone[$scnt].output)"
+    json_add_string "forward" "$(uci get firewall.@zone[$scnt].forward)"
+fi
+json_close_object
+
+# WAN policy
+json_add_object "wan"
+cnt=0
+scnt=-1
+while [ "x$(uci get firewall.@zone[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+    [ "$(uci get firewall.@zone[$cnt].name)" = "wan" ] && scnt=$cnt
+    cnt=$(($cnt+1))
+done
+if [ "$scnt" != "-1" ]; then
+    json_add_string "input" "$(uci get firewall.@zone[$scnt].input)"
+    json_add_string "output" "$(uci get firewall.@zone[$scnt].output)"
+    json_add_string "forward" "$(uci get firewall.@zone[$scnt].forward)"
+fi
+json_close_object
+
+# End of zone policy
+json_close_object
+
+# Redirect
 json_add_array "redirect"
 
 cnt=0
@@ -29,6 +76,7 @@ done
 
 json_close_array
 
+# Rule
 json_add_array "rule"
 
 cnt=0
