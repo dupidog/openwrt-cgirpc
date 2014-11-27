@@ -1,0 +1,138 @@
+# Firewall set script
+
+json_get_var FUNC "function"
+
+RET_INFO=""
+
+# General setting
+if [ "$FUNC" = "general" ]; then
+    json_get_var SYN_FLOOD "syn_flood"
+    [ "x$SYN_FLOOD" != "x" ] && uci set firewall.@defautls[0].syn_flood="$SYN_FLOOD" && RET_INFO="$RET_INFO,\"syn_flood\":\"$SYN_FLOOD\""
+    json_get_var DROP_INVALID "drop_invalid"
+    [ "x$DROP_INVALID" != "x" ] && uci set firewall.@defautls[0].drop_invalid="$DROP_INVALID" && RET_INFO="$RET_INFO,\"drop_invalid\":\"$DROP_INVALID\""
+fi
+
+# Zone setting
+if [ "$FUNC" = "zone" ]; then
+    json_get_var ZONE "zone"
+    json_get_var INPUT "input"
+    json_get_var OUTPUT "output"
+    json_get_var FORWARD "forward"
+
+    # Default zone
+    if [ "$ZONE" = "default" ]; then
+        [ "x$INPUT" != "x" ] && uci set firewall.@defautls[0].input="$INPUT"
+        [ "x$OUTPUT" != "x" ] && uci set firewall.@defautls[0].output="$OUTPUT"
+        [ "x$FORWARD" != "x" ] && uci set firewall.@defautls[0].forward="$FORWARD"
+        RET_INFO="$RET_INFO,\"zone\":\"$ZONE\""
+    fi
+
+    # Other zone
+    cnt=0
+    scnt=-1
+    while [ "x$(uci get firewall.@zone[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+        [ "$(uci get firewall.@zone[$cnt].name)" = "wan" ] && scnt=$cnt
+        cnt=$(($cnt+1))
+    done
+    if [ "$scnt" != "-1" ]; then
+        [ "x$INPUT" != "x" ] && uci set firewall.@zone[$scnt].input="$INPUT"
+        [ "x$OUTPUT" != "x" ] && uci set firewall.@zone[$scnt].output="$OUTPUT"
+        [ "x$FORWARD" != "x" ] && uci set firewall.@zone[$scnt].forward="$FORWARD"
+        RET_INFO="$RET_INFO,\"zone\":\"$ZONE\""
+    fi
+fi
+
+# Redirect setting
+if [ "$FUNC" = "redirect" ]; then
+    json_get_var OPERATION "operation"
+    json_get_var NAME "name"
+    json_get_var DPORT "dport"
+    json_get_var DEST_IP "dest_ip"
+    json_get_var DEST_PORT "dest_port"
+    json_get_var PROTO "proto"
+
+    if [ "x$NAME" != "x" ]; then
+         NAME="cgirpc_$NAME"
+    else
+         echo "{\"ret\":\"ERROR\",\"reason\":\"redirect name invalid\"}"
+         exit 1
+    fi
+    DPORT=$(echo "$DPORT" | grep "^[0-9]\{1,5\}$")
+    DSET_PORT=$(echo "$DSET_PORT" | grep "^[0-9]\{1,5\}$")
+    DEST_IP=$(echo "$DEST_IP" | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$")
+    [ "x$DEST_PORT" = "x" ] && DEST_PORT="$DPORT"
+    [ "x$PROTO" = "x" ] && PROTO="tcp udp"
+
+    if [ "$OPERATION" = "add" ]; then
+        [ "x$DEST_IP" = "x" -o "x$DPORT" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"redirect dport or ip invalid\"}" && exit 2
+        SECTION=$(uci add firewall redirect)
+        uci set firewall.$SECTION.name="$NAME"
+        uci set firewall.$SECTION.target="DNAT"
+        uci set firewall.$SECTION.src="wan"
+        uci set firewall.$SECTION.dest="lan"
+        uci set firewall.$SECTION.src_dport="$DPORT"
+        uci set firewall.$SECTION.dest_ip="$DEST_IP"
+        uci set firewall.$SECTION.dest_port="$DEST_PORT"
+        uci set firewall.$SECTION.proto="$PROTO"
+        uci set firewall.$SECTION.enabled="1"
+        RET_INFO="$RET_INFO,\"function\":\"redirect\",\"operation\":\"add\""
+    else
+        cnt=0
+        scnt=-1
+        while [ "x$(uci get firewall.@redirect[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+            [ "$(uci get firewall.@redirect[$cnt].name)" = "$NAME" ] && scnt=$cnt
+            cnt=$(($cnt+1))
+        done
+        [ "$scnt" = "-1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"redirect name not found\"}" && exit 3
+        [ "$OPERATION" = "delete" ] && uci delete firewall.@redirect[$scnt] && RET_INFO="$RET_INFO,\"function\":\"redirect\",\"operation\":\"delete\""
+        [ "$OPERATION" = "enable" ] && uci set firewall.@redirect[$scnt].enabled="1" && RET_INFO="$RET_INFO,\"function\":\"redirect\",\"operation\":\"enable\""
+        [ "$OPERATION" = "disable" ] && uci set firewall.@redirect[$scnt].enabled="0" && RET_INFO="$RET_INFO,\"function\":\"redirect\",\"operation\":\"disable\""
+    fi
+fi
+
+# Rule setting
+if [ "$FUNC" = "rule" ]; then
+    json_get_var OPERATION "operation"
+    json_get_var NAME "name"
+    json_get_var DEST_PORT "dest_port"
+    json_get_var PROTO "proto"
+
+    if [ "x$NAME" != "x" ]; then
+         NAME="cgirpc_$NAME"
+    else
+         echo "{\"ret\":\"ERROR\",\"reason\":\"rule name invalid\"}"
+         exit 1
+    fi
+    DEST_PORT=$(echo "$DEST_PORT" | grep "^[0-9]\{1,5\}$")
+    [ "x$PROTO" = "x" ] && PROTO="tcp udp"
+
+    if [ "$OPERATION" = "add" ]; then
+        [ "x$DEST_PORT" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"redirect dport or ip invalid\"}" && exit 2
+        SECTION=$(uci add firewall rule)
+        uci set firewall.$SECTION.name="$NAME"
+        uci set firewall.$SECTION.target="ACCEPT"
+        uci set firewall.$SECTION.src="wan"
+        uci set firewall.$SECTION.dest_port="$DEST_PORT"
+        uci set firewall.$SECTION.proto="$PROTO"
+        uci set firewall.$SECTION.enabled="1"
+        RET_INFO="$RET_INFO,\"function\":\"rule\",\"operation\":\"add\""
+    else
+        cnt=0
+        scnt=-1
+        while [ "x$(uci get firewall.@rule[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+            [ "$(uci get firewall.@rule[$cnt].name)" = "$NAME" ] && scnt=$cnt
+            cnt=$(($cnt+1))
+        done
+        [ "$scnt" = "-1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"rule name not found\"}" && exit 3
+        [ "$OPERATION" = "delete" ] && uci delete firewall.@rule[$scnt] && RET_INFO="$RET_INFO,\"function\":\"rule\",\"operation\":\"delete\""
+        [ "$OPERATION" = "enable" ] && uci set firewall.@rule[$scnt].enabled="1" && RET_INFO="$RET_INFO,\"function\":\"rule\",\"operation\":\"enable\""
+        [ "$OPERATION" = "disable" ] && uci set firewall.@rule[$scnt].enabled="0" && RET_INFO="$RET_INFO,\"function\":\"rule\",\"operation\":\"disable\""
+    fi
+fi
+
+uci commit firewall
+
+# Echo result
+[ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
+
+[ "$1" = "0" -o "x$1" = "x" ] && /etc/init.d/firewall restart

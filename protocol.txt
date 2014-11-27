@@ -1,27 +1,71 @@
-QRERY
+=====QRERY=====
+
 1.Sys status    {"method":"get","target":"sys"}
+
 2.Wan status    {"method":"get","target":"wan"}
+
 3.Lan status    {"method":"get","target":"lan"}
+
 4.AP scan	{"method":"get","target":"apscan","device":DEVICE}
+			// default device value is "wlan0"
 
-SET
-1.WAN           {"method":"set","target":"wan","protocol":"static"","ip":IP,
-                        "netmask":NETMASK,"gateway":GATEWAY,"broadcast":BROADCAST,
-                        "dns":[DNS1,...]}
-                {"method":"set","target":"wan","protocol":"dhcp"}
-                {"method":"set","target":"wan","protocol":"pppoe","username":USERNAME,
-                        "password":PASSWORD,"ac":AC,"service",SERVICE}
-2.WLAN          {"method":"set","target":"wlan","device":DEVICE,"enabled":"0|1"}
-                {"method":"set","target":"wlan","device":DEVICE,"channel":CHANNEL}
-                {"method":"set","target":"wlan","device":DEVICE,"encryption":"none|wep-open|wep-shared|psk|psk2|psk-mixed",
-                        "ssid":SSID,"key":KEY|[KEY-NO,KEY1,KEY2,KEY3,KEY4]} 
-3.LAN           {"method":"set","target":"lan","ip":IP,"netmask":NETMASK}
-4.DHCP          {"method":"set","target":"dhcp","enabled":"0|1"}
-                {"method":"set","target":"dhcp","start":START_IP,"limit":LIMIT_IP,"leasetime":NUM_IN_HOURS}
 
-SYS
+======SET======
+
+1.WAN		{"method":"set","target":"wan","protocol":"static"","ip":IP,
+			"netmask":NETMASK,"gateway":GATEWAY,
+			"broadcast":BROADCAST,"dns":[DNS1,...]}
+			// gateway, broadcast, dns are optional
+		{"method":"set","target":"wan","protocol":"dhcp"}
+		{"method":"set","target":"wan","protocol":"pppoe","username":USERNAME,
+			"password":PASSWORD,"ac":AC,"service",SERVICE}
+			// ac, service are optional
+
+2.WLAN		{"method":"set","target":"wlan","device":DEVICE,"enabled":"0|1"}
+			// default device value is "radio0"
+		{"method":"set","target":"wlan","device":DEVICE,"channel":CHANNEL}
+			// default device value is "radio0"
+		{"method":"set","target":"wlan","device":DEVICE,"ssid":SSID,
+			"encryption":"none|wep-open|wep-shared|psk|psk2|psk-mixed",
+			"key":KEY|[KEY-NO,KEY1,KEY2,KEY3,KEY4]}
+			// default device value is "radio0"; if psk|psk2|psk-mixed used, key 
+			// should be simply KEY; if wep-open|wep-shared used, key should be 
+			// in format [KEY-NO,KEY1,KEY2,KEY3,KEY4], specify KEY will be traslated 
+			// to [1,KEY,,,]; if none encryption, key will be ignored
+
+3.LAN		{"method":"set","target":"lan","ip":IP,"netmask":NETMASK}
+
+4.DHCP		{"method":"set","target":"dhcp","enabled":"0|1"}
+		{"method":"set","target":"dhcp","start":START_IP,"limit":LIMIT_IP,
+			"leasetime":NUM_IN_HOURS}
+
+5.Firewall	{"method":"set","target":"firewall","function":"general",
+			"syn_flood":"0|1","drop_invalid":"0|1"}
+			// ommit syn_flood/drop_invalid means not change
+		{"method":"set","target":"firewall","function":"zone",
+			"zone":"default|lan|wan","input":"ACCEPT|REJECT|DROP",
+			"output":"ACCEPT|REJECT|DROP","forward":"ACCEPT|REJECT|DROP"}
+			// ommit input/output/forward means not change
+		{"method":"set","target":"firewall","function":"redirect",
+			"operation":"add|delete|enable|disable","name":NAME,"dport":DPORT,
+			"dest_ip":DEST_IP,"dest_port":DEST_PORT,"proto":"tcp udp|tcp|udp|none"}
+			// if operation=delete/enable/disable, only name is needed in subsequent 
+			// parameter; ommit dest_port means the same as dport, ommit proto means 
+			// "tcp udp"
+		{"method":"set","target":"firewall","function":"rule",
+			"operation":"add|delete|enable|disable","name":NAME,
+			"dest_port":DEST_PORT,"proto":"tcp udp|tcp|udp|none"}
+			// if operation=delete/enable/disable, only name is needed in subsequent 
+			// parameter; ommit proto means "tcp udp"
+
+
+======SYS======
+
 1.Reboot router {"method":"sys","target":"reboot"}
+
 2.Restart wifi  {"method":"sys","target":"wifi"}
+
 3.Restart net   {"method":"sys","target":"network"}
+
 4.Rest router   {"method":"sys","target":"reset"}
 
