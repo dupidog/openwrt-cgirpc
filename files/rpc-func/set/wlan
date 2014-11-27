@@ -88,7 +88,7 @@ if [ "x$WLAN_KEY" != "x" ]; then
     uci delete wireless.@wifi-iface[$ifnum].key3
     uci delete wireless.@wifi-iface[$ifnum].key4
     if [ "$WLAN_ENCRYPTION" = "wep-open" -o "$WLAN_ENCRYPTION" = "wep-shared" ]; then
-        if [ "$(echo $KEY | awk '{print NF}')" = '1' ]; then
+        if [ "$(echo $WLAN_KEY | awk '{print NF}')" = '1' ]; then
             uci set wireless.@wifi-iface[$ifnum].key="1"
             uci set wireless.@wifi-iface[$ifnum].key1="s:$WLAN_KEY"
         else
