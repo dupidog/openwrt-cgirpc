@@ -1,0 +1,31 @@
+# Samba status get script
+
+json_init
+
+# General setting
+json_add_string "hostname" "$(uci get samba.@samba[0].name)"
+json_add_string "workgroup" "$(uci get samba.@samba[0].workgroup)"
+json_add_string "description" "$(uci get samba.@samba[0].description)"
+json_add_string "sharehome" "$(uci get samba.@samba[0].homes)"
+
+# Samba shares
+json_add_array "sambashare"
+
+cnt=0
+while [ "x$(uci get samba.@sambashare[$cnt] 2>&1 1>/dev/null)" = "x" ]
+do
+    json_add_object "$cnt"
+    json_add_string "name" "$(uci get samba.@sambashare[$cnt].name)"
+    json_add_string "path" "$(uci get samba.@sambashare[$cnt].path)"
+    json_add_string "users" "$(uci get samba.@sambashare[$cnt].users)"
+    json_add_string "guestok" "$(uci get samba.@sambashare[$cnt].guest_ok)"
+    json_add_string "readonly" "$(uci get samba.@sambashare[$cnt].read_only)"
+    json_add_string "createmask" "$(uci get samba.@sambashare[$cnt].create_mask)"
+    json_add_string "dirmask" "$(uci get samba.@sambashare[$cnt].dir_mask)"
+    json_close_object
+    cnt=$(($cnt+1))
+done
+
+json_close_array
+
+json_dump
