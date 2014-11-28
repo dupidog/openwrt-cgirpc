@@ -9,6 +9,9 @@
 4.AP scan	{"method":"get","target":"apscan","device":DEVICE}
 			// default device value is "wlan0"
 
+5.Firewall	{"method":"get","target":"firewall"}
+
+6.Samba		{"method":"get","target":"samba"}
 
 ======SET======
 
@@ -58,6 +61,15 @@
 			// if operation=delete/enable/disable, only name is needed in subsequent 
 			// parameter; ommit proto means "tcp udp"
 
+6.Samba		{"method":"set","target":"samba","hostname":HOSTNAME,"workgroup":WORKGROUP,
+			"description":DESCRIPTION,"sharehome":"0|1"}
+			// ommit section means no change
+		{"method":"set","target":"samba","sambashare":"add|delete","name":NAME,
+			"path":PATH,"users":USERS,"guestok":"yes|no","readonly":"yes|no",
+			"createmask":FMASK,"dirmask":DMASK
+			// name section must be specified when deleting a sambashare, other
+			// sections will be ignored; when adding a sambashare, ommit sections
+			// will use their defalut value
 
 ======SYS======
 

@@ -1,0 +1,60 @@
+# Samba set script
+
+RET_INFO=""
+
+# General setting
+json_get_var HOSTNAME "hostname"
+json_get_var WORKGROUP "workgroup"
+json_get_var DESCRIPT "description"
+json_get_var SHAREHOME "sharehome"
+[ "x$HOSTNAME" != "x" ] && uci set samba.@samba[0].name="$HOSTNAME" && RET_INFO="$RET_INFO,\"hostname\":\"$HOSTNAME\""
+[ "x$WORKGROUP" != "x" ] && uci set samba.@samba[0].workgroup="$WORKGROUP" && RET_INFO="$RET_INFO,\"workgroup\":\"$WORKGROUP\""
+[ "x$DESCRIPT" != "x" ] && uci set samba.@samba[0].description="$DESCRIPT" && RET_INFO="$RET_INFO,\"description\":\"$DESCRIPT\""
+[ "x$SHAREHOME" != "x" ] && uci set samba.@samba[0].homes="$SHAREHOME" && RET_INFO="$RET_INFO,\"sharehome\":\"$SHAREHOME\""
+
+# Share setting
+json_get_var SHAREOP "sambashare"
+
+# Add sambashare
+if [ "$SHAREOP" = "add" ]; then
+
+    json_get_var NAME "name"
+    json_get_var SHAREPATH "path"
+    json_get_var USERS "users"
+    json_get_var GUESTOK "guestok"
+    json_get_var READONLY "readonly"
+    json_get_var FMASK "createmask"
+    json_get_var DMASK "dirmask"
+    SECTION="$(uci add samba sambashare)"
+    uci set samba.$SECTION.name="${NAME:-unnamed_$SECTION}"
+    uci set samba.$SECTION.path="${SHAREPATH:-/mnt}"
+    uci set samba.$SECTION.users="${USERS:-root}"
+    uci set samba.$SECTION.guest_ok="${GUESTOK:-no}"
+    uci set samba.$SECTION.read_only="${READONLY:-no}"
+    uci set samba.$SECTION.create_mask="${FMASK:-0644}"
+    uci set samba.$SECTION.dir_mask="${DMASK:-0755}"
+    RET_INFO="$RET_INFO,\"sambashare\":\"add\",\"name\":\"${NAME:-unnamed_$SECTION}\""
+
+# Delete sambashare
+elif [ "$SHAREOP" = "delete" ]; then
+
+    json_get_var NAME "name"
+    [ "x$NAME" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"sambashare name invalid\"}" && exit 2
+    cnt=0
+    scnt=-1
+    while [ "x$(uci get samba.@sambashare[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+        [ "$(uci get samba.@sambashare[$cnt].name)" = "$NAME" ] && scnt=$cnt
+        cnt=$(($cnt+1))
+    done
+    [ "$scnt" = "-1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"sambashare name not found\"}" && exit 3
+    uci delete samba.@sambashare[$scnt]
+    RET_INFO="$RET_INFO,\"sambashare\":\"delete\",\"name\":\"$NAME\""
+
+fi
+
+uci commit samba
+
+# Echo result
+[ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
+
+[ "$1" = "0" -o "x$1" = "x" ] && /etc/init.d/samba restart
