@@ -1,0 +1,61 @@
+# Qos set script
+
+RET_INFO=""
+
+# General setting
+json_get_var ENABLED "enabled"
+json_get_var UPLOAD "upload"
+json_get_var DOWNLOAD "download"
+json_get_var OVERHEAD "overhead"
+json_get_var HALFDUPLEX "halfduplex"
+[ "x$ENABLED" != "x" ] && uci set qos.wan.enabled="$ENABLED" && RET_INFO="$RET_INFO,\"enabled\":\"$ENABLED\""
+[ "x$UPLOAD" != "x" ] && uci set qos.wan.upload="$UPLOAD" && RET_INFO="$RET_INFO,\"upload\":\"$UPLOAD\""
+[ "x$DOWNLOAD" != "x" ] && uci set qos.wan.download="$DOWNLOAD" && RET_INFO="$RET_INFO,\"download\":\"$DOWNLOAD\""
+[ "x$OVERHEAD" != "x" ] && uci set qos.wan.overhead="$OVERHEAD" && RET_INFO="$RET_INFO,\"overhead\":\"$OVERHEAD\""
+[ "x$HALFDUPLEX" != "x" ] && uci set qos.wan.halfduplex="$HALFDUPLEX" && RET_INFO="$RET_INFO,\"halfduplex\":\"$HALFDUPLEX\""
+
+# Qosrule setting
+json_get_var RULEOP "qosrule"
+
+# Add qosrule 
+if [ "$RULEOP" = "add" ]; then
+
+    json_get_var TARGET "class"
+    json_get_var PORTS "ports"
+    json_get_var SRCHOST "srchost"
+    json_get_var DSTHOST "dsthost"
+    json_get_var SERVICE "service"
+    json_get_var PROTO "proto"
+    json_get_var CONNBYTES "connbytes"
+    json_get_var COMMENT "comment"
+    SECTION="$(uci add qos classify)"
+    uci set qos.$SECTION.target="${TARGET:-Normal}"
+    uci set qos.$SECTION.ports="$PORTS"
+    uci set qos.$SECTION.srchost="$SRCHOST"
+    uci set qos.$SECTION.dsthost="$DSTHOST"
+    uci set qos.$SECTION.layer7="$SERVICE"
+    uci set qos.$SECTION.proto="$PROTO"
+    uci set qos.$SECTION.connbytes="$CONNBYTES"
+    uci set qos.$SECTION.comment="$COMMENT"
+    cnt=0
+    while [ "x$(uci get qos.@classify[$cnt] 2>&1 1>/dev/null)" = "x" ]
+    do
+        cnt=$(($cnt+1))    
+    done
+    cnt=$(($cnt-1))    
+    RET_INFO="$RET_INFO,\"qosrule\":\"add\",,\"seqid\":\"$cnt\""
+
+# Delete qosrule
+elif [ "$RULEOP" = "delete" ]; then
+
+    json_get_var ID "id"
+    [ "x$(uci delete qos.@classify[$ID] 2>&1 1>/dev/null)" != "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"qos rule id invalid\"}" && exit 2
+    RET_INFO="$RET_INFO,\"qosrule\":\"delete\",\"seqid\":\"$ID\""
+fi
+
+uci commit qos
+
+# Echo result
+[ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
+
+[ "$1" = "0" -o "x$1" = "x" ] && /etc/init.d/qos restart

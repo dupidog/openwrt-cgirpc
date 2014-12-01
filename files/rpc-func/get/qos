@@ -1,0 +1,39 @@
+# Qos status get script
+
+json_init
+
+# General setting
+TMP="$(uci get qos.wan.enabled)"
+json_add_string "enabled" "${TMP:-0}"
+TMP="$(uci get qos.wan.upload | grep '^[0-9]*$')"
+json_add_string "upload" "${TMP:-unlimited}"
+TMP="$(uci get qos.wan.download | grep '^[0-9]*$')"
+json_add_string "download" "${TMP:-unlimited}"
+TMP="$(uci get qos.wan.overhead)"
+json_add_string "overhead" "${TMP:-0}"
+TMP="$(uci get qos.wan.halfduplex)"
+json_add_string "halfduplex" "${TMP:-0}"
+
+# Qos rules
+json_add_array "qosrule"
+
+cnt=0
+while [ "x$(uci get qos.@classify[$cnt] 2>&1 1>/dev/null)" = "x" ]
+do
+    json_add_object "$cnt"
+    json_add_string "id" "$cnt"
+    json_add_string "class" `uci get qos.@classify[$cnt].target | awk '{if($1!~"^$"){print $1} else{print "Normal"}}'`
+    json_add_string "ports" "$(uci get qos.@classify[$cnt].ports)"
+    json_add_string "srchost" "$(uci get qos.@classify[$cnt].srchost)"
+    json_add_string "dsthost" "$(uci get qos.@classify[$cnt].dsthost)"
+    json_add_string "service" "$(uci get qos.@classify[$cnt].layer7)"
+    json_add_string "proto" "$(uci get qos.@classify[$cnt].proto)"
+    json_add_string "connbytes" "$(uci get qos.@classify[$cnt].connbytes)"
+    json_add_string "comment" "$(uci get qos.@classify[$cnt].comment)"
+    json_close_object
+    cnt=$(($cnt+1))
+done
+
+json_close_array
+
+json_dump

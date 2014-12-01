@@ -13,6 +13,8 @@
 
 6.Samba		{"method":"get","target":"samba"}
 
+7.QoS		{"method":"get","target":"qos"}
+
 ======SET======
 
 1.WAN		{"method":"set","target":"wan","protocol":"static"","ip":IP,
@@ -70,6 +72,17 @@
 			// name section must be specified when deleting a sambashare, other
 			// sections will be ignored; when adding a sambashare, ommit sections
 			// will use their defalut value
+
+7.QoS		{"method":"set","target":"qos","enabled":"0|1","upload":UPLOAD,"download":DOWNLOAD,
+			"overhead":"0|1",halfduplex:"0|1"}
+			// ommit section means no change, ommit upload/download or set to "0" means
+			// unlimited
+		{"method":"set","target":"qos","qosrule":"add","class":"Priority|Express|Normal|Bulk",
+			"ports":PORTS,"srchost":SRCHOST,"dsthost":DSTHOST,"service":SERVICE,
+			"proto":"TCP|UDP|ICMP","connbytes":CONNBYTES,"comment":COMMENT}
+			// multi ports can be "23,80,2000-2100", multi srchost/dsthost can be
+			// "192.168.1.100,192.168.1.200-192.168.210", ommit section means for all
+		{"method":"set","target":"qos","qosrule":"delete","id":ID}
 
 ======SYS======
 
