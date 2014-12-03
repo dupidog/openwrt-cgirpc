@@ -1,0 +1,45 @@
+# wlan config get script
+
+# run iwinfo command
+IWINFO_RET=$(iwinfo)
+
+json_init
+
+
+json_add_array "wlan"
+
+cnt=0
+while [ "x$(uci get wireless.@wifi-iface[$cnt] 2>&1 1>/dev/null)" = "x" ]
+do
+    json_add_object "$cnt"
+
+    DEVICE="$(uci get wireless.@wifi-iface[$cnt].device)"
+    json_add_string "device" "$DEVICE"
+    json_add_string "mode" "$(uci get wireless.@wifi-iface[$cnt].mode)"
+    json_add_string "ssid" "$(uci get wireless.@wifi-iface[$cnt].ssid)"
+    ENCRYPTION="$(uci get wireless.@wifi-iface[$cnt].encryption)"
+    json_add_string "encryption" "$ENCRYPTION"
+    [ "$ENCRYPTION" = "wep-shared" -o "$ENCRYPTION" = "wep-open" ] && \
+        KEY_NO="$(uci get wireless.@wifi-iface[$cnt].key | grep '^[1-4]$')" && \
+        [ -n "$KEY_NO" ] && \
+        json_add_string "key" "$(uci get wireless.@wifi-iface[$cnt].key$KEY_NO | cut -b 3-)" || \
+        json_add_string "key" "$(uci get wireless.@wifi-iface[$cnt].key)"
+    json_add_string "channel" "$(uci get wireless.$DEVICE.channel)"
+    json_add_string "htmode" "$(uci get wireless.$DEVICE.htmode)"
+    json_add_string "txpower" "$(uci get wireless.$DEVICE.txpower)"
+    json_add_string "country" "$(uci get wireless.$DEVICE.country)"
+
+    IWLIST="$(iw phy$cnt info)"
+    json_add_array "channels"
+    eval "$(echo "$IWLIST" | \
+        awk '$1=="*" && $3=="MHz" && NF==6 {print "json_add_string "$4" "$4}' | \
+        sed -e 's/\[\|\]//g'
+    )"
+    json_close_array
+
+    json_close_object
+    cnt=$(($cnt+1))
+done
+
+json_close_array
+json_dump

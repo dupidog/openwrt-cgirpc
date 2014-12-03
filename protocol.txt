@@ -6,14 +6,16 @@
 
 3.Lan status    {"method":"get","target":"lan"}
 
-4.AP scan	{"method":"get","target":"apscan","device":DEVICE}
-			// default device value is "wlan0"
+4.WLAN status	{"method":"get","target":"wlan"}
 
 5.Firewall	{"method":"get","target":"firewall"}
 
 6.Samba		{"method":"get","target":"samba"}
 
 7.QoS		{"method":"get","target":"qos"}
+
+8.AP scan	{"method":"get","target":"apscan","device":DEVICE}
+			// default device value is "wlan0"
 
 ======SET======
 
