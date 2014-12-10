@@ -5,7 +5,6 @@ IWINFO_RET=$(iwinfo)
 
 json_init
 
-
 json_add_array "wlan"
 
 cnt=0
@@ -15,6 +14,8 @@ do
 
     DEVICE="$(uci get wireless.@wifi-iface[$cnt].device)"
     json_add_string "device" "$DEVICE"
+    [ "$(uci get wireless.@wifi-iface[$cnt].disabled)" = "1" ] && enabled="0" || enabled="1"
+    json_add_string "enabled" "$enabled"
     json_add_string "mode" "$(uci get wireless.@wifi-iface[$cnt].mode)"
     json_add_string "ssid" "$(uci get wireless.@wifi-iface[$cnt].ssid)"
     ENCRYPTION="$(uci get wireless.@wifi-iface[$cnt].encryption)"
