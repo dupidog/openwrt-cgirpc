@@ -30,11 +30,22 @@ do
     json_add_string "country" "$(uci get wireless.$DEVICE.country)"
 
     IWLIST="$(iw phy$cnt info)"
-    json_add_array "channels"
-    eval "$(echo "$IWLIST" | \
-        awk '$1=="*" && $3=="MHz" && NF==6 {print "json_add_string "$4" "$4}' | \
-        sed -e 's/\[\|\]//g'
+    CHNLS5G="$(echo "$IWLIST" | \
+        sed -e 's/\[\|\]//g' | \
+        awk '$1=="*" && $3=="MHz" && $4>20 && NF==6 {print $4}'
     )"
+    if [ "x$CHNLS5G" != "x" ]; then
+        CHNLS="$CHNLS5G"
+        json_add_string "band" "5G"
+    else
+        CHNLS="$(echo "$IWLIST" | \
+            sed -e 's/\[\|\]//g' | \
+            awk '$1=="*" && $3=="MHz" && NF==6 {print $4}'
+        )"
+        json_add_string "band" "2.4G"
+    fi
+    json_add_array "channels"
+    for each in $CHNLS; do json_add_string $each $each; done
     json_close_array
 
     json_close_object
