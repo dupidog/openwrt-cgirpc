@@ -1,0 +1,83 @@
+# AP mode switch script
+#
+# Mode ap means access point mode ( Master Mode )
+# Mode sta means station mode ( Client Mode )
+
+json_get_var DEVICE "device"
+json_get_var MODE "mode"
+
+RET_INFO=""
+
+# default wlan device
+if [ "x$DEVICE" = "x" ]; then DEVICE="radio0"; fi
+RET_INFO="$RET_INFO,\"device\":\"$DEVICE\""
+
+# default wlan mode
+if [ "$MODE" != "sta" ]; then MODE="ap"; fi
+RET_INFO="$RET_INFO,\"mode\":\"$MODE\""
+
+# check wlan device
+if [ "x`uci get wireless.$DEVICE`" = "x" ]; then
+    echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"invalid wlan device\"}"
+    exit 1;
+fi
+
+# search/match wifi-iface
+tempnum=0
+ifnum=-1
+while [ $tempnum -le 4 ]
+do
+    if [ "`uci get wireless.@wifi-iface[$tempnum]`" = "wifi-iface" -a \
+        "`uci get wireless.@wifi-iface[$tempnum].device`" = "$DEVICE" ]; then
+        ifnum=$tempnum
+    fi
+    tempnum=$(($tempnum+1))
+done
+
+if [ $ifnum = -1 ]; then
+    echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"iface not found\"}"
+    exit 2;
+fi
+
+CURMODE="$(uci get wireless.@wifi-iface[$ifnum].mode)"
+
+[ "$CURMODE" = "$MODE" ] && echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"mode not change\"}" && exit 0;
+
+# Backup current setting
+uci set wireless.backup_${DEVICE}_${CURMODE}=backup-wifi-iface
+eval "$(uci show wireless.@wifi-iface[$ifnum] | awk -F '.' 'NF==3{print $3}' | sed -e "s/^/uci\ set\ wireless.backup_${DEVICE}_${CURMODE}./g")"
+
+# Try restore previous backup
+if [ "$(uci get wireless.backup_${DEVICE}_${MODE})" = "backup-wifi-iface" ]; then
+    uci delete wireless.@wifi-iface[$ifnum]
+    SECTION="$(uci add wireless wifi-iface)"
+    eval "$(uci show wireless.backup_${DEVICE}_${MODE} | awk -F '.' 'NF==3 {print $3}' | sed -e "s/^/uci\ set\ wireless.${SECTION}./g")"
+# Set the mode and network if no backup found
+else
+    uci set wireless.@wifi-iface[$ifnum].mode=$MODE
+    [ "$MODE" = "ap" ] && uci set wireless.@wifi-iface[$ifnum].network=lan || \
+    uci set wireless.@wifi-iface[$ifnum].network=wwan
+fi
+
+# Set wwan and dhcp
+if [ "$(uci get network.wwan)" != "interface" ]; then
+    uci set network.wwan=interface
+    uci set network.proto=dhcp
+fi
+
+uci set dhcp.wwan=dhcp
+uci set dhcp.interface=wwan
+uci set dhcp.ignore=1
+
+uci commit
+
+if [ "x$RET_INFO" != "x" ]; then
+    echo "{\"ret\":\"OK\"$RET_INFO}"
+else
+    echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
+fi
+
+if [ "$1" = "0" -o "x$1" = "x" ]; then
+    /etc/init.d/network restart
+    /etc/init.d/dhcp restart
+fi

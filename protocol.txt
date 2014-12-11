@@ -86,6 +86,11 @@
 			// "192.168.1.100,192.168.1.200-192.168.210", ommit section means for all
 		{"method":"set","target":"qos","qosrule":"delete","id":ID}
 
+8.AP mode	{"method":"set","target":"apmode","device":DEVICE,"mode":"ap|sta"}
+			// ommit device means "radio0", ap mode means "Access Point" or "Master" mode,
+			// sta mode means "Station" or "Client" mode. After switching mode, a previos
+			// backup setting will be used.
+
 ======SYS======
 
 1.Reboot router {"method":"sys","target":"reboot"}
