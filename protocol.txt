@@ -1,10 +1,10 @@
 =====QRERY=====
 
-1.Sys status    {"method":"get","target":"sys"}
+1.SYS status    {"method":"get","target":"sys"}
 
-2.Wan status    {"method":"get","target":"wan"}
+2.WAN status    {"method":"get","target":"wan"}
 
-3.Lan status    {"method":"get","target":"lan"}
+3.LAN status    {"method":"get","target":"lan"}
 
 4.WLAN status	{"method":"get","target":"wlan"}
 
@@ -16,6 +16,8 @@
 
 8.AP scan	{"method":"get","target":"apscan","device":DEVICE}
 			// default device value is "wlan0"
+
+9.WWAN status	{"method":"get","target":"wwan"}
 
 ======SET======
 
@@ -32,9 +34,11 @@
 			// default device value is "radio0"
 		{"method":"set","target":"wlan","device":DEVICE,"channel":CHANNEL}
 			// default device value is "radio0"
-		{"method":"set","target":"wlan","device":DEVICE,"ssid":SSID,
-			"encryption":"none|wep-open|wep-shared|psk|psk2|psk-mixed",
-			"key":KEY|[KEY-NO,KEY1,KEY2,KEY3,KEY4]}
+		{"method":"set","target":"wlan","device":DEVICE,"ssid":SSID,"bssid":BSSID}
+			// default device value is "radio0"; bssid needs to be specified when
+			// device working in ap client mode
+		{"method":"set","target":"wlan","device":DEVICE,"encryption":"none|wep-open|
+			wep-shared|psk|psk2|psk-mixed","key":KEY|[KEY-NO,KEY1,KEY2,KEY3,KEY4]}
 			// default device value is "radio0"; if psk|psk2|psk-mixed used, key 
 			// should be simply KEY; if wep-open|wep-shared used, key should be 
 			// in format [KEY-NO,KEY1,KEY2,KEY3,KEY4], specify KEY will be traslated 
@@ -90,6 +94,15 @@
 			// ommit device means "radio0", ap mode means "Access Point" or "Master" mode,
 			// sta mode means "Station" or "Client" mode. After switching mode, a previos
 			// backup setting will be used.
+
+9.WWAN		{"method":"set","target":"wwan","protocol":"static"","ip":IP,
+			"netmask":NETMASK,"gateway":GATEWAY,
+			"broadcast":BROADCAST,"dns":[DNS1,...]}
+			// gateway, broadcast, dns are optional
+		{"method":"set","target":"wwan","protocol":"dhcp"}
+		{"method":"set","target":"wwan","protocol":"pppoe","username":USERNAME,
+			"password":PASSWORD,"ac":AC,"service",SERVICE}
+			// ac, service are optional
 
 ======SYS======
 

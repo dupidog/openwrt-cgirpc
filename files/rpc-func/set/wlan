@@ -5,6 +5,7 @@ json_get_var WLAN_ENABLED "enabled"
 json_get_var WLAN_CHANNEL "channel"
 json_get_var WLAN_ENCRYPTION "encryption"
 json_get_var WLAN_SSID "ssid"
+json_get_var WLAN_BSSID "bssid"
 json_get_var WLAN_KEY "key"
 
 WLAN_CHANNEL=$(echo $WLAN_CHANNEL | grep ^[0-9]*$)
@@ -75,11 +76,14 @@ if [ "x$WLAN_ENCRYPTION" != "x" ]; then
     fi
 fi
 
-# set ssid
+# set ssid/bssid
 if [ "x$WLAN_SSID" != "x" ]; then
     uci set wireless.@wifi-iface[$ifnum].ssid="$WLAN_SSID"
     RET_INFO="$RET_INFO,\"ssid\":\"$WLAN_SSID\""
 fi
+# if no bssid specified, delete the bssid option
+uci set wireless.@wifi-iface[$ifnum].bssid="$WLAN_BSSID"
+RET_INFO="$RET_INFO,\"bssid\":\"$WLAN_SSID\""
 
 # sed key(s)
 if [ "x$WLAN_KEY" != "x" ]; then

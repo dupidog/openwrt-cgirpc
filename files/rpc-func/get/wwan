@@ -1,0 +1,3 @@
+# WWAN status get script
+
+ifstatus wwan | sed -e 's/-/_/g'
