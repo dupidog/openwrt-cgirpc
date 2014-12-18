@@ -83,7 +83,7 @@ if [ "x$WLAN_SSID" != "x" ]; then
 fi
 # if no bssid specified, delete the bssid option
 uci set wireless.@wifi-iface[$ifnum].bssid="$WLAN_BSSID"
-RET_INFO="$RET_INFO,\"bssid\":\"$WLAN_SSID\""
+RET_INFO="$RET_INFO,\"bssid\":\"$WLAN_BSSID\""
 
 # sed key(s)
 if [ "x$WLAN_KEY" != "x" ]; then
