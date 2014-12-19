@@ -2,29 +2,41 @@
 
 . /usr/share/libubox/jshn.sh
 
+# Read configs
 DEBUG=$(uci get cgirpc.debug.enabled)
-
 RPC_FUNC_PATH=$(uci get cgirpc.common.rpc_func_path)
-if [ "x$RPC_FUNC_PATH" = "x" ]; then
-RPC_FUNC_PATH='/usr/lib/cgi-rpc/rpc-func'
-fi
-
+[ "x$RPC_FUNC_PATH" = "x" ] && RPC_FUNC_PATH='/usr/lib/cgi-rpc/rpc-func'
 COMMON_FUNC_PATH=$(uci get cgirpc.common.common_func_path)
-if [ "x$COMMON_FUNC_PATH" = "x" ]; then
-COMMON_FUNC_PATH='/usr/bin'
-fi
+[ "x$COMMON_FUNC_PATH" = "x" ] && COMMON_FUNC_PATH='/usr/bin'
+AUTH_NETWORK=$(uci get cgirpc.common.auth_network | grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}\/[0-3]\{0,1\}[0-9]$")
+[ "x$AUTH_NETWORK" = "x" ] && AUTH_NETWORK='192.168.208.0/24'
+AUTH_TIMEOUT=$(uci get cgirpc.common.auth_timeout | grep "^[0-9]\{1,6\}$")
+[ "x$AUTH_TIMEOUT" = "x" ] && AUTH_TIMEOUT='300'
+AUTH_PASSWORD=$(uci get cgirpc.common.auth_password)
 
-if [ "$REQUEST_METHOD" = "POST" ]; then
-QUERY_STRING=$(cat -)
-fi
+[ "$REQUEST_METHOD" = "POST" ] && QUERY_STRING=$(cat -)
 
 json_load $(echo $QUERY_STRING | sed 's/^rpc=//g' | $COMMON_FUNC_PATH/urldecode)
 
 json_get_var METHOD "method"
 json_get_var TARGET "target"
+json_get_var AUTHPW "auth"
 
 echo "Content-type: text/json"
 echo ""
+
+# Check secure network in config file
+AUTH=$(echo "$REMOTE_ADDR $AUTH_NETWORK" | $COMMON_FUNC_PATH/checknetwork)
+
+# Check previous auth
+[ "$AUTH" != "1" ] && AUTH=$(echo `date +%s` `cat /tmp/cgi-rpc-auth/$REMOTE_ADDR` $AUTH_TIMEOUT | $COMMON_FUNC_PATH/checktimeout)
+
+# Check password delivered in json
+[ "$AUTH" != "1" ] && [ "x$AUTH_PASSWORD" != "x" ] && [ "$AUTH_PASSWORD" = "$AUTHPW" ] && AUTH=1
+
+[ "$AUTH" != "1" ] && echo '{"RET":"NOT_AUTHORIZED"}' && exit 1
+
+mkdir -p /tmp/cgi-rpc-auth && date +%s > /tmp/cgi-rpc-auth/$REMOTE_ADDR
 
 if [ "$DEBUG" != "0" -a "x$DEBUG" != "x" ]; then
 echo "+-+-------Debug JSON--------+-+"
@@ -34,5 +46,7 @@ echo "Target: $TARGET"
 echo "Run script: rpc-func/$METHOD/$TARGET"
 echo "+-+-------------------------+-+"
 fi
+
+[ "x$METHOD" = "x" -a "x$TARGET" = "x" ] && echo '{"RET":"OK"}' && exit 0
 
 . $RPC_FUNC_PATH/$METHOD/$TARGET $DEBUG

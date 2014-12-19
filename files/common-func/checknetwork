@@ -1,0 +1,9 @@
+#!/bin/sh
+awk -F '[ ./]' '{
+if(NF!=9){print "0"; exit;}
+ip=$1*2^24+$2*2^16+$3*2^8+$4;
+net=$5*2^24+$6*2^16+$7*2^8+$8;
+len=2^(32-$9);
+if(ip-net>=0&&ip-net<len) print "1";
+else print "0";
+}'

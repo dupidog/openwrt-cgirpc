@@ -1,0 +1,6 @@
+#!/bin/sh
+awk '{
+if(NF!=3) {print "0"; exit}
+if($1-$2>=0 && $1-$2<=$3) print "1";
+else print "0";
+}'
