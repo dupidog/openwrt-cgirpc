@@ -1,3 +1,8 @@
+=====LOGIN====
+
+1.Login		{"auth":PASSWORD}
+		// PASSWORD is set previously in config file as auth_key
+
 =====QRERY=====
 
 1.SYS status    {"method":"get","target":"sys"}
