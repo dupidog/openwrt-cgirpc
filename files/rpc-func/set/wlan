@@ -42,10 +42,12 @@ fi
 
 # enable/disable wlan device
 if [ "$WLAN_ENABLED" = "0" ]; then
-    uci set wireless.$WLAN_DEVICE.disabled="1"
+    uci set wireless.$WLAN_DEVICE.disabled=
+    uci set wireless.@wifi-iface[$ifnum].disabled="1"
     RET_INFO="$RET_INFO,\"enabled\":\"0\""
 elif [ "x$WLAN_ENABLED" != "x" ]; then
-    uci set wireless.$WLAN_DEVICE.disabled="0"
+    uci set wireless.@WLAN_DEVICE.disabled=
+    uci set wireless.@wifi-iface[$ifnum].disabled="0"
     RET_INFO="$RET_INFO,\"enabled\":\"1\""
 fi 
 
@@ -83,7 +85,7 @@ if [ "x$WLAN_SSID" != "x" ]; then
 fi
 # if no bssid specified, delete the bssid option
 uci set wireless.@wifi-iface[$ifnum].bssid="$WLAN_BSSID"
-RET_INFO="$RET_INFO,\"bssid\":\"$WLAN_BSSID\""
+[ "x$WLAN_BSSID" != "x" ]RET_INFO="$RET_INFO,\"bssid\":\"$WLAN_BSSID\""
 
 # sed key(s)
 if [ "x$WLAN_KEY" != "x" ]; then
@@ -117,4 +119,4 @@ else
     echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
 fi
 
-if [ "$1" = "0" -o "x$1" = "x" ]; then wifi; fi
+[ "$1" = "0" -o "x$1" = "x" ] && wifi > /dev/null
