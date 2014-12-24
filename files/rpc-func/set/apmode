@@ -41,7 +41,7 @@ fi
 
 CURMODE="$(uci get wireless.@wifi-iface[$ifnum].mode)"
 
-[ "$CURMODE" = "$MODE" ] && echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"mode not change\"}" && exit 0;
+[ "$CURMODE" = "$MODE" ] && echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"mode not change\",\"mode\":\"$MODE\"}" && exit 1;
 
 # Backup current setting
 uci set wireless.backup_${DEVICE}_${CURMODE}=backup-wifi-iface
