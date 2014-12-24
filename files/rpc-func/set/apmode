@@ -62,12 +62,12 @@ fi
 # Set wwan and dhcp
 if [ "$(uci get network.wwan)" != "interface" ]; then
     uci set network.wwan=interface
-    uci set network.proto=dhcp
+    uci set network.wwan.proto=dhcp
 fi
 
 uci set dhcp.wwan=dhcp
-uci set dhcp.interface=wwan
-uci set dhcp.ignore=1
+uci set dhcp.wwan.interface=wwan
+uci set dhcp.wwan.ignore=1
 
 uci commit
 
