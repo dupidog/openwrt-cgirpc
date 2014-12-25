@@ -1,0 +1,43 @@
+# Dlna status get script
+
+json_init
+
+# General setting
+json_add_string "enabled" "$(uci get minidlna.config.enabled)"
+json_add_string "port" "$(uci get minidlna.config.port)"
+json_add_string "name" "$(uci get minidlna.config.friendly_name)"
+
+# Media dirs
+RAW_DIRS="$(uci get minidlna.config.media_dir)"
+
+json_add_array "mediadir"
+
+for item in $RAW_DIRS; do
+    case "${item:0:2}" in
+    "A," )
+        type="audio"
+        dirpath="${item:2}"
+        ;;
+    "P," )
+        type="image"
+        dirpath="${item:2}"
+        ;;
+    "V," )
+        type="video"
+        dirpath="${item:2}"
+        ;;
+    * )
+        type="all"
+        dirpath="$item"
+        ;;
+    esac
+    json_add_object "$item"
+    json_add_string "type" "$type"
+    json_add_string "dir" "$dirpath"
+    json_close_object 
+done
+
+json_close_array
+
+# Dump result
+json_dump
