@@ -26,6 +26,8 @@
 
 10.DLNA status	{"method":"get","target":"dlna"}
 
+11.DHCP status	{"method":"get","target":"dhcp"}
+
 ======SET======
 
 1.WAN		{"method":"set","target":"wan","protocol":"static"","ip":IP,

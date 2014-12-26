@@ -1,0 +1,10 @@
+# Dhcp status get script
+
+json_init
+
+[ "$(uci get dhcp.lan.ignore)" = "1" ] && json_add_string "enabled" "0" || json_add_string "enabled" "1"
+json_add_string "start" "$(uci get dhcp.lan.start)"
+json_add_string "limit" "$(uci get dhcp.lan.limit)"
+json_add_string "leasetime" "$(uci get dhcp.lan.leasetime)"
+
+json_dump
