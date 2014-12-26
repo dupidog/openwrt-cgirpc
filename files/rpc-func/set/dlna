@@ -1,0 +1,55 @@
+# Dlna set script
+
+RET_INFO=""
+
+# General setting
+json_get_var ENABLED "enabled"
+json_get_var PORT "port"
+json_get_var NAME "name"
+[ "x$ENABLED" != "x" ] && uci set minidlna.config.enabled="$ENABLED" && RET_INFO="$RET_INFO,\"enabled\":\"$ENABLED\""
+[ "x$PORT" != "x" ] && uci set minidlna.config.port="$PORT" && RET_INFO="$RET_INFO,\"port\":\"$PORT\""
+[ "x$NAME" != "x" ] && uci set minidlna.config.friendly_name="$NAME" && RET_INFO="$RET_INFO,\"name\":\"$NAME\""
+
+# Media dirs setting
+json_get_var MEDIA_DIR "mediadir"
+
+if [ "$MEDIA_DIR" = "J_A1" ]; then
+
+    json_get_keys MEDIA_DIR_KEYS "mediadir"
+    uci delete minidlna.config.media_dir
+
+    for key in $MEDIA_DIR_KEYS; do
+        json_select "mediadir"
+        json_select "$key"
+        json_get_var type "type"
+        json_get_var dirpath "dir"
+
+        case "$type" in
+        "audio" | "A" )
+            uci add_list minidlna.config.media_dir="A,$dirpath"
+            ;;
+        "image" | "P" )
+            uci add_list minidlna.config.media_dir="P,$dirpath"
+            ;;
+        "video" | "V" )
+            uci add_list minidlna.config.media_dir="V,$dirpath"
+            ;;
+        * )
+            uci add_list minidlna.config.media_dir="$dirpath"
+            ;;
+        esac
+
+        json_select
+
+    done
+
+    RET_INFO="$RET_INFO,\"mediadir\":\"$key dir(s) added\""
+
+fi
+
+uci commit minidlna
+
+# Echo result
+[ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
+
+[ "$1" = "0" -o "x$1" = "x" ] && /etc/init.d/minidlna restart > /dev/null

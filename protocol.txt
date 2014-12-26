@@ -24,6 +24,8 @@
 
 9.WWAN status	{"method":"get","target":"wwan"}
 
+10.DLNA status	{"method":"get","target":"dlna"}
+
 ======SET======
 
 1.WAN		{"method":"set","target":"wan","protocol":"static"","ip":IP,
@@ -108,6 +110,10 @@
 		{"method":"set","target":"wwan","protocol":"pppoe","username":USERNAME,
 			"password":PASSWORD,"ac":AC,"service",SERVICE}
 			// ac, service are optional
+
+10.DLNA		{"method":"set","target":"dlna","enabled":"0|1","port":PORT,"name":FRIENDLY_NAME,
+			"mediadir":[{"type":"all|audio|image|video","dir":MEDIA_DIR_PATH}, ... ]}
+			// ommit section means no change.
 
 ======SYS======
 
