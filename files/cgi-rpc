@@ -16,7 +16,7 @@ AUTH_PASSWORD=$(uci get cgirpc.common.auth_password)
 
 [ "$REQUEST_METHOD" = "POST" ] && QUERY_STRING=$(cat -)
 
-json_load $(echo $QUERY_STRING | sed 's/^rpc=//g' | $COMMON_FUNC_PATH/urldecode)
+json_load "$(echo $QUERY_STRING | sed 's/^rpc=//g' | $COMMON_FUNC_PATH/urldecode)"
 
 json_get_var METHOD "method"
 json_get_var TARGET "target"
