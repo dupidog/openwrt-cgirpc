@@ -3,8 +3,10 @@
 json_init
 
 # General setting
-json_add_string "enabled" "$(uci get minidlna.config.enabled)"
-json_add_string "port" "$(uci get minidlna.config.port)"
+ENABLED="$(uci get minidlna.config.enabled)"
+json_add_string "enabled" "${ENABLED:-0}"
+PORT="$(uci get minidlna.config.port)"
+json_add_string "port" "${PORT:-8200}"
 json_add_string "name" "$(uci get minidlna.config.friendly_name)"
 
 # Media dirs
@@ -38,6 +40,21 @@ for item in $RAW_DIRS; do
 done
 
 json_close_array
+    
+json_add_object "status"
+if wget -s http://127.0.0.1:${PORT:-8200}; then
+    json_add_string "alive" "1"
+    STATUS_RAW=$(wget http://127.0.0.1:${PORT:-8200} -O - | sed -e 's/<br>\|<\/tr>\|<tr>/\n/g' | sed -e 's/<[^<,^>]*>/ /g')
+    json_add_string "audio" "$(echo "$STATUS_RAW" | awk '$1=="Audio" {print $3}')"
+    json_add_string "video" "$(echo "$STATUS_RAW" | awk '$1=="Video" {print $3}')"
+    json_add_string "image" "$(echo "$STATUS_RAW" | awk '$1=="Image" {print $3}')"
+else
+    json_add_string "alive" "0"
+    json_add_string "audio" "0"
+    json_add_string "video" "0"
+    json_add_string "image" "0"
+fi
+json_close_object 
 
 # Dump result
 json_dump
