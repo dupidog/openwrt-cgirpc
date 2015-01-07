@@ -81,8 +81,11 @@
 6.Samba		{"method":"set","target":"samba","hostname":HOSTNAME,"workgroup":WORKGROUP,
 			"description":DESCRIPTION,"sharehome":"0|1"}
 			// ommit section means no change
+		{"method":"set","target":"samba","needpassword":"0|1","password":PASSWORD,
+			"readonly":"0|1"}
+			// these sections set global password and readonly settings
 		{"method":"set","target":"samba","sambashare":"add|delete","name":NAME,
-			"path":PATH,"users":USERS,"guestok":"yes|no","readonly":"yes|no",
+			"path":PATH,"users":USERS,"guestok":"yes|no","sharereadonly":"yes|no",
 			"createmask":FMASK,"dirmask":DMASK
 			// name section must be specified when deleting a sambashare, other
 			// sections will be ignored; when adding a sambashare, ommit sections

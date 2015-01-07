@@ -8,6 +8,14 @@ json_add_string "workgroup" "$(uci get samba.@samba[0].workgroup)"
 json_add_string "description" "$(uci get samba.@samba[0].description)"
 json_add_string "sharehome" "$(uci get samba.@samba[0].homes)"
 
+# Global setting
+READONLY="0"
+[ "$(uci get samba.@sambashare[0].read_only)" = "yes" ] && READONLY="1"
+json_add_string "readonly" "$READONLY"
+NEED_PASSWORD="0"
+[ "$(uci get samba.@sambashare[0].guest_ok)" = "no" ] && NEED_PASSWORD="1"
+json_add_string "needpassword" "$NEED_PASSWORD"
+
 # Samba shares
 json_add_array "sambashare"
 
@@ -19,7 +27,7 @@ do
     json_add_string "path" "$(uci get samba.@sambashare[$cnt].path)"
     json_add_string "users" "$(uci get samba.@sambashare[$cnt].users)"
     json_add_string "guestok" "$(uci get samba.@sambashare[$cnt].guest_ok)"
-    json_add_string "readonly" "$(uci get samba.@sambashare[$cnt].read_only)"
+    json_add_string "sharereadonly" "$(uci get samba.@sambashare[$cnt].read_only)"
     json_add_string "createmask" "$(uci get samba.@sambashare[$cnt].create_mask)"
     json_add_string "dirmask" "$(uci get samba.@sambashare[$cnt].dir_mask)"
     json_close_object

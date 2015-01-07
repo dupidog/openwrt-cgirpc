@@ -12,6 +12,50 @@ json_get_var SHAREHOME "sharehome"
 [ "x$DESCRIPT" != "x" ] && uci set samba.@samba[0].description="$DESCRIPT" && RET_INFO="$RET_INFO,\"description\":\"$DESCRIPT\""
 [ "x$SHAREHOME" != "x" ] && uci set samba.@samba[0].homes="$SHAREHOME" && RET_INFO="$RET_INFO,\"sharehome\":\"$SHAREHOME\""
 
+# Set global password and readonly
+# Warning: use these sections will cause all the samba share setting overwritten!!
+json_get_var NEED_PASSWORD "needpassword"
+json_get_var PASSWORD "password"
+json_get_var READONLY "readonly"
+
+# Set all the shares password on/off and ro/rw
+if [ "$NEED_PASSWORD" = "0" ]; then
+    cnt=0
+    while [ "x$(uci get samba.@sambashare[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+        uci set samba.@sambashare[$cnt].guest_ok="yes"
+        uci set samba.@sambashare[$cnt].users=
+        cnt=$(($cnt+1))
+    done
+    RET_INFO="$RET_INFO,\"needpassword\":\"no\""
+elif [ "$NEED_PASSWORD" = "1" ]; then
+    cnt=0
+    while [ "x$(uci get samba.@sambashare[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+        uci set samba.@sambashare[$cnt].guest_ok="no"
+        cnt=$(($cnt+1))
+    done
+    RET_INFO="$RET_INFO,\"needpassword\":\"yes\""
+fi
+
+# Update the samba password
+[ "x$PASSWORD" != "x" ] && echo $PASSWORD$'\n'$PASSWORD | smbpasswd -a root -s && RET_INFO="$RET_INFO,\"password\":\"<hidden>\"" 
+
+# Set all the shares ro/rw
+if [ "$READONLY" = "1" ]; then
+    cnt=0
+    while [ "x$(uci get samba.@sambashare[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+        uci set samba.@sambashare[$cnt].read_only="yes"
+        cnt=$(($cnt+1))
+    done
+    RET_INFO="$RET_INFO,\"readonly\":\"yes\""
+elif [ "$READONLY" = "0" ]; then
+    cnt=0
+    while [ "x$(uci get samba.@sambashare[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+        uci set samba.@sambashare[$cnt].read_only="no"
+        cnt=$(($cnt+1))
+    done
+    RET_INFO="$RET_INFO,\"readonly\":\"no\""
+fi
+
 # Share setting
 json_get_var SHAREOP "sambashare"
 
@@ -22,7 +66,7 @@ if [ "$SHAREOP" = "add" ]; then
     json_get_var SHAREPATH "path"
     json_get_var USERS "users"
     json_get_var GUESTOK "guestok"
-    json_get_var READONLY "readonly"
+    json_get_var SREADONLY "sharereadonly"
     json_get_var FMASK "createmask"
     json_get_var DMASK "dirmask"
     SECTION="$(uci add samba sambashare)"
@@ -30,7 +74,7 @@ if [ "$SHAREOP" = "add" ]; then
     uci set samba.$SECTION.path="${SHAREPATH:-/mnt}"
     uci set samba.$SECTION.users="${USERS:-root}"
     uci set samba.$SECTION.guest_ok="${GUESTOK:-no}"
-    uci set samba.$SECTION.read_only="${READONLY:-no}"
+    uci set samba.$SECTION.read_only="${SREADONLY:-no}"
     uci set samba.$SECTION.create_mask="${FMASK:-0644}"
     uci set samba.$SECTION.dir_mask="${DMASK:-0755}"
     RET_INFO="$RET_INFO,\"sambashare\":\"add\",\"name\":\"${NAME:-unnamed_$SECTION}\""
