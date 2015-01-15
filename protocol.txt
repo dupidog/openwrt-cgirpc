@@ -28,6 +28,10 @@
 
 11.DHCP status	{"method":"get","target":"dhcp"}
 
+12.Act clients	{"method":"get","target":"clientlist"}
+
+13.Deny list	{"method":"get","target":"denylist"}
+
 ======SET======
 
 1.WAN		{"method":"set","target":"wan","protocol":"static"","ip":IP,
@@ -119,6 +123,9 @@
 10.DLNA		{"method":"set","target":"dlna","enabled":"0|1","port":PORT,"name":FRIENDLY_NAME,
 			"mediadir":[{"type":"all|audio|image|video","dir":MEDIA_DIR_PATH}, ... ]}
 			// ommit section means no change.
+
+11.Deny list	{"method":"set","target":"denylist","operation":"add|delete|flush","mac":MAC}
+			// use this command will overwrite system wifi allow/deny lists!
 
 ======SYS======
 

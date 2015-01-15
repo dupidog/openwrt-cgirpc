@@ -1,0 +1,21 @@
+# This script lists the denied mac address 
+
+json_init
+json_add_array "denylist"
+
+cnt=0
+MACLIST=
+while [ "$(uci get wireless.@wifi-iface[$cnt])" = "wifi-iface" ]; do
+    [ "$(uci get wireless.@wifi-iface[$cnt].macfilter)" = "deny" ] && \
+        MACLIST="$MACLIST $(uci get wireless.@wifi-iface[$cnt].maclist)"
+    cnt=$(($cnt+1))
+done
+
+DIST_MACLIST="$(echo $MACLIST | tr ' ' '\n' | awk '!a[$1]++')"
+
+for each in $DIST_MACLIST; do
+    json_add_string "$each" "$each"
+done
+
+json_close_array
+json_dump
