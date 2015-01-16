@@ -1,3 +1,10 @@
 # WAN status get script
 
-ifstatus wan | sed -e 's/-/_/g'
+json_load "$(ifstatus wan | sed -e 's/-/_/g')"
+
+if [ "$(uci get network.wan.proto)" = "pppoe" ]; then
+    json_add_string "username" "$(uci get network.wan.username)"
+    json_add_string "password" "$(uci get network.wan.password)"
+fi
+
+json_dump
