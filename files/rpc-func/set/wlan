@@ -71,7 +71,7 @@ if [ "x$WLAN_ENCRYPTION" != "x" ]; then
     elif [ "$WLAN_ENCRYPTION" = "wep-open" ]; then
         uci set wireless.@wifi-iface[$ifnum].encryption="wep-open"
     elif [ "$WLAN_ENCRYPTION" = "wep-shared" ]; then
-        uci set wireless.@wifi-iface[$ifnum].encryption="wep-shard"
+        uci set wireless.@wifi-iface[$ifnum].encryption="wep-shared"
     else
         echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"invalid wlan encryption\"}"
         exit 3;
