@@ -127,6 +127,12 @@
 11.Deny list	{"method":"set","target":"denylist","operation":"add|delete|flush","mac":MAC}
 			// use this command will overwrite system wifi allow/deny lists!
 
+===BATCHSET====
+
+1. BATCHSET	{"method":"batchset","commands":[JSON_CMD1,JSON_CMD2,...]}
+			// batchset only supports set and sys commands, changes will not be applied
+			// automatically.
+
 ======SYS======
 
 1.Reboot router {"method":"sys","target":"reboot"}

@@ -48,5 +48,25 @@ echo "+-+-------------------------+-+"
 fi
 
 [ "x$METHOD" = "x" -a "x$TARGET" = "x" ] && echo '{"RET":"OK"}' && exit 0
+# Batch mode
+if [ "$METHOD" = "batchset" ]; then
 
-. $RPC_FUNC_PATH/$METHOD/$TARGET $DEBUG
+    json_get_keys CMD_KEYS "commands"
+    RETS=
+    for key in $CMD_KEYS; do
+        json_select "commands"
+        json_select "$key"
+        json_get_var SUBMETHOD "method"
+        json_get_var SUBTARGET "target"
+        [ "$METHOD" != "get" ] && RETS="$RETS,$(. $RPC_FUNC_PATH/$SUBMETHOD/$SUBTARGET 1)"
+        json_select ..
+        json_select ..
+    done
+    echo "{\"rets\":[${RETS:1}]}"
+
+# Normal mode
+else
+
+    . $RPC_FUNC_PATH/$METHOD/$TARGET $DEBUG
+
+fi

@@ -39,7 +39,8 @@ if [ "$MEDIA_DIR" = "J_A1" ]; then
             ;;
         esac
 
-        json_select
+        json_select ..
+        json_select ..
 
     done
 
