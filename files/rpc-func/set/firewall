@@ -135,4 +135,4 @@ uci commit firewall
 # Echo result
 [ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
 
-[ "$1" = "0" -o "x$1" = "x" ] && /etc/init.d/firewall restart
+[ "$1" = "0" -o "x$1" = "x" ] && /etc/init.d/firewall restart > /dev/null

@@ -52,4 +52,5 @@ uci commit wireless
 # Echo result
 [ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
 
-[ "$1" = "0" -o "x$1" = "x" ] && wifi > /dev/null
+[ "$1" = "0" -o "x$1" = "x" ] && . $RPC_FUNC_PATH/sys/wifi > /dev/null
+

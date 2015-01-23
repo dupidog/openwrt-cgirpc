@@ -78,6 +78,6 @@ else
 fi
 
 if [ "$1" = "0" -o "x$1" = "x" ]; then
-    /etc/init.d/network restart
+    . $RPC_FUNC_PATH/sys/network > /dev/null
     /etc/init.d/dhcp restart
 fi

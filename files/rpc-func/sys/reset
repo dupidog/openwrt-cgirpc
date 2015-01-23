@@ -2,4 +2,4 @@
 
 rm -rf /overlay/*
 echo "{\"ret\":\"OK\"}"
-reboot
+(sleep $SYS_OPS_DELAY; reboot) &

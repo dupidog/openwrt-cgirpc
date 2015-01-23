@@ -1,4 +1,4 @@
 # Network restart script
 
 echo "{\"ret\":\"OK\"}"
-/etc/init.d/network restart
+(sleep $SYS_OPS_DELAY; /etc/init.d/network restart > /dev/null) &

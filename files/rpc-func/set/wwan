@@ -116,4 +116,4 @@ else
     echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
 fi
 
-if [ "$1" = "0" -o "x$1" = "x" ]; then /etc/init.d/network restart; fi
+[ "$1" = "0" -o "x$1" = "x" ] && . $RPC_FUNC_PATH/sys/network > /dev/null
