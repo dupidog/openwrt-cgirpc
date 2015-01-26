@@ -20,7 +20,7 @@ if [ "$OPS" = "add" ]; then
         cnt=$(($cnt+1))
     done
 
-    RET_INFO="$RET_INFO,\"opration\":\"add_denylist\",\"mac\":\"$MAC\""
+    RET_INFO="$RET_INFO,\"operation\":\"add_denylist\",\"mac\":\"$MAC\""
 
 elif [ "$OPS" = "delete" ]; then
 
@@ -32,7 +32,7 @@ elif [ "$OPS" = "delete" ]; then
         cnt=$(($cnt+1))
     done
 
-    RET_INFO="$RET_INFO,\"opration\":\"delete_denylist\",\"mac\":\"$MAC\""
+    RET_INFO="$RET_INFO,\"operation\":\"delete_denylist\",\"mac\":\"$MAC\""
 
 elif [ "$OPS" = "flush" ]; then
 
@@ -43,7 +43,7 @@ elif [ "$OPS" = "flush" ]; then
         cnt=$(($cnt+1))
     done
 
-    RET_INFO="$RET_INFO,\"opration\":\"flush_denylist\""
+    RET_INFO="$RET_INFO,\"operation\":\"flush_denylist\""
 
 fi
 
