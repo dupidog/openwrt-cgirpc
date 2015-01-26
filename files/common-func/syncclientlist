@@ -1,0 +1,23 @@
+#!/bin/sh
+
+eval "$(cat /proc/net/arp | awk '$3=="0x2" && $6=="br-lan" {
+    print "CLIENTS=\"$CLIENTS "$4"\""
+}' | tr 'a-f' 'A-F')"
+
+for each in $CLIENTS; do
+    cnt=0
+    flag=0
+    while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" -a "$flag" != "1" ]; do
+        [ "$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')" = "$each" ] && flag=1
+        cnt=$(($cnt+1))
+    done
+    if [ "$flag" = "0" ]; then
+        SECTION="$(uci add clientlist client)"
+        uci set clientlist.$SECTION.mac="$each"
+        GUESS_NAME="$(cat /tmp/dhcp.leases | grep -i $each | cut -d ' ' -f4)"
+        [ "x$GUESS_NAME" = "x" ] && NAME="$each" || NAME="$GUESS_NAME"
+        uci set clientlist.$SECTION.name="$NAME"
+    fi
+done
+
+uci commit clientlist
