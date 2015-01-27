@@ -1,5 +1,7 @@
 # This script lists the active/inactive clients
 
+$COMMON_FUNC_PATH/syncclientlist
+
 json_init
 json_add_array "clientlist"
 

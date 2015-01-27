@@ -96,14 +96,19 @@ define Package/$(PKG_NAME)/install
 	$(CP) ./files/common-func/* $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc/config
 	$(CP) ./files/cgirpc.config $(1)/etc/config/cgirpc
+	$(CP) ./files/clientlist.config $(1)/etc/config/clientlist
 	$(INSTALL_DIR) $(1)/www/cgi-bin
 	$(CP) ./files/cgi-rpc $(1)/www/cgi-bin/cgi-rpc
+	$(INSTALL_DIR) $(1)/etc/crontabs
+	touch $(1)/etc/crontabs/root
+	sed -i '/syncclientlist/d' $(1)/etc/crontabs/root
+	cat ./files/cgirpc.cron >> $(1)/etc/crontabs/root
 endef
-
 
 define Package/$(PKG_NAME)/postrm
 #!/bin/sh
-rm -rf /usr/lib/cgi-rpc
+rm -rf $(1)/usr/lib/cgi-rpc
+sed -i '/syncclientlist/d' $(1)/etc/crontabs/root
 endef
 
 # This line executes the necessary commands to compile our program.
