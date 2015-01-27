@@ -5,7 +5,7 @@ RET_INFO=""
 json_get_var OPS "operation"
 json_get_var MAC "mac"
 
-MAC="$(echo $MAC | tr '[a-f]' '[A-F]' | grep '^\([1-9,A-F]\{2\}:\)\{5\}[1-9,A-F]\{2\}')"
+MAC="$(echo $MAC | tr '[a-f]' '[A-F]' | grep '^\([0-9,A-F]\{2\}:\)\{5\}[0-9,A-F]\{2\}$')"
 
 if [ "$OPS" = "add" ]; then
 
