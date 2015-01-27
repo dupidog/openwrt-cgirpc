@@ -28,9 +28,12 @@
 
 11.DHCP status	{"method":"get","target":"dhcp"}
 
-12.Act clients	{"method":"get","target":"clientlist"}
+12.Deny list	{"method":"get","target":"denylist"}
 
-13.Deny list	{"method":"get","target":"denylist"}
+13.Client list	{"method":"get","target":"clientlist"}
+			// online/offine clientlist on LAN
+		{"method":"get","target":"onlineclientlist"}
+			// legency online clientlist on LAN/WAN/STB
 
 ======SET======
 
@@ -126,6 +129,8 @@
 
 11.Deny list	{"method":"set","target":"denylist","operation":"add|delete|flush","mac":MAC}
 			// use this command will overwrite system wifi allow/deny lists!
+
+12.Client list	{"method":"set","target":"clientlist","operation":"delete|modify|flush","mac":MAC,"name":NAME}
 
 ===BATCHSET====
 

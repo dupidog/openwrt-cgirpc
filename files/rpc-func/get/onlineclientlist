@@ -1,0 +1,17 @@
+# This script lists the active clients on LAN (include the STB if it is online)
+
+json_init
+json_add_array "clientlist"
+
+eval "$(cat /proc/net/arp | awk '
+    $3=="0x2" { print "json_add_object \""$1"\""
+        print "json_add_string \"mac\" \""$4"\""
+        print "json_add_string \"ip\" \""$1"\""
+	if ($6=="br-lan") print "json_add_string \"type\" \"lan\""
+	if ($6=="eth0.2") print "json_add_string \"type\" \"wan\""
+	if ($6=="eth0.3") print "json_add_string \"type\" \"stb\""
+        print "json_close_object"
+}')"
+
+json_close_array
+json_dump

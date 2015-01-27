@@ -1,0 +1,54 @@
+# This script modifies/removes the client list
+
+RET_INFO=""
+
+json_get_var OPS "operation"
+json_get_var MAC "mac"
+json_get_var NAME "name"
+
+MAC="$(echo $MAC | tr '[a-f]' '[A-F]' | grep '^\([0-9,A-F]\{2\}:\)\{5\}[0-9,A-F]\{2\}$')"
+
+if [ "$OPS" = "add" ]; then
+
+    echo "{\"ret\":\"ERROR\",\"reason\":\"operation not implemented\"}" && exit 2
+
+elif [ "$OPS" = "delete" ]; then
+
+    [ "x$MAC" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid mac address\"}" && exit 2
+    cnt=0
+    flag=0
+    while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
+        [ "$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')" = "$MAC" ] && flag=1 && uci delete clientlist.@client[$cnt]
+        cnt=$(($cnt+1))
+    done
+    [ "$flag" != "1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"mac not found\"}" && exit 3
+    RET_INFO="$RET_INFO,\"operation\":\"delete_clientlist\",\"mac\":\"$MAC\""
+
+elif [ "$OPS" = "modify" ]; then
+
+    [ "x$MAC" = "x" -o "x$NAME" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid mac address or name\"}" && exit 2
+    cnt=0
+    flag=0
+    while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
+        [ "$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')" = "$MAC" ] && flag=1 && uci set clientlist.@client[$cnt].name="$NAME"
+        cnt=$(($cnt+1))
+    done
+    [ "$flag" != "1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"mac not found\"}" && exit 3
+    RET_INFO="$RET_INFO,\"operation\":\"modify_clientlist\",\"mac\":\"$MAC\""
+
+elif [ "$OPS" = "flush" ]; then
+
+    cnt=0
+    while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+        uci delete clientlist.@client[$cnt]
+        cnt=$(($cnt+1))
+    done
+
+    RET_INFO="$RET_INFO,\"operation\":\"flush_clientlist\""
+
+fi
+
+uci commit clientlist
+
+# Echo result
+[ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
