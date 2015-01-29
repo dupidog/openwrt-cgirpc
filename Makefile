@@ -56,6 +56,7 @@ endef
 
 define Package/$(PKG_NAME)/conffiles
 /etc/config/cgirpc
+/etc/config/clientlist
 endef
  
 
