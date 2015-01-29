@@ -1,0 +1,67 @@
+# This script adds/modifies/removes the block list
+
+RET_INFO=""
+
+json_get_var OPS "operation"
+json_get_var MAC "mac"
+json_get_values BLOCKLIST "site"
+[ "x$BLOCKLIST" = "x" ] && json_get_var BLOCKLIST "site"
+
+MAC="$(echo $MAC | tr '[a-f]' '[A-F]' | grep '^\([0-9,A-F]\{2\}:\)\{5\}[0-9,A-F]\{2\}$')"
+BLOCKLIST="$(echo $BLOCKLIST | tr '|;' '  ' | sed -e 's/J_A1//g')"
+
+[ "x$MAC" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid mac address\"}" && exit 2
+cnt=0
+scnt=-1
+flag=0
+while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
+    [ "$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')" = "$MAC" ] && flag=1 && scnt=$cnt
+    cnt=$(($cnt+1))
+done
+
+[ "$flag" != "1" -o "$scnt" = "-1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"mac not found\"}" && exit 3
+
+if [ "$OPS" = "enable" ]; then
+
+    uci set clientlist.@client[$scnt].disabled=0
+    RET_INFO="$RET_INFO,\"operation\":\"enable_client\",\"mac\":\"$MAC\""
+
+elif [ "$OPS" = "disable" ]; then
+
+    uci set clientlist.@client[$scnt].disabled=1
+    RET_INFO="$RET_INFO,\"operation\":\"disable_client\",\"mac\":\"$MAC\""
+
+elif [ "$OPS" = "addsite" ]; then
+
+    for each in $BLOCKLIST; do
+        uci add_list clientlist.@client[$scnt].blocklist=$each
+    done
+    RET_INFO="$RET_INFO,\"operation\":\"addsite\",\"mac\":\"$MAC\",\"site\":\"$(echo $BLOCKLIST | tr ' ' '|')\""
+
+elif [ "$OPS" = "deletesite" ]; then
+
+    for each in $BLOCKLIST; do
+        uci del_list clientlist.@client[$scnt].blocklist=$each
+    done
+    RET_INFO="$RET_INFO,\"operation\":\"deletesite\",\"mac\":\"$MAC\",\"site\":\"$(echo $BLOCKLIST | tr ' ' '|')\""
+
+elif [ "$OPS" = "flushlist" ]; then
+
+    uci delete clientlist.@client[$scnt].blocklist
+    RET_INFO="$RET_INFO,\"operation\":\"flushlist\",\"mac\":\"$MAC\""
+
+elif [ "$OPS" = "setlist" ]; then
+
+    uci delete clientlist.@client[$scnt].blocklist
+    for each in $BLOCKLIST; do
+        uci add_list clientlist.@client[$scnt].blocklist=$each
+    done
+    RET_INFO="$RET_INFO,\"operation\":\"setlist\",\"mac\":\"$MAC\",\"site\":\"$(echo $BLOCKLIST | tr ' ' '|')\""
+
+fi
+
+uci commit clientlist
+$COMMON_FUNC_PATH/syncblocklist > /dev/null 2>&1
+
+# Echo result
+[ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"

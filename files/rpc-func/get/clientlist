@@ -19,6 +19,8 @@ while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
     json_add_string "mac" "$MAC"
     json_add_string "name" "$NAME"
     json_add_string "ip" "$IP"
+    [ "$(uci get clientlist.@client[$cnt].disabled)" = "1" ] && ENABLED="0" || ENABLED="1"
+    json_add_string "enabled" "$ENABLED"
     [ "x$IP" != "x" ] && json_add_string "online" "1" || json_add_string "online" "0"
     json_close_object
     cnt=$(($cnt+1))

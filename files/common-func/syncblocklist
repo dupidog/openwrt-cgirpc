@@ -1,0 +1,23 @@
+#!/bin/sh
+
+LISTFILE=/tmp/cgi-rpc.firewall.blocklist
+echo > $LISTFILE
+
+cnt=0
+while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+    MAC="$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')"
+    DISABLED="$(uci get clientlist.@client[$cnt].disabled)"
+    BLOCKLIST="$(uci get clientlist.@client[$cnt].blocklist)"
+    if [ "$DISABLED" = "1" ]; then
+        echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -j DROP" >> $LISTFILE
+    else
+        for each in $BLOCKLIST; do
+            echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m string --string $each --algo kmp -j DROP" >> $LISTFILE
+        done
+    fi
+    cnt=$(($cnt+1))
+done
+
+[ ! -L /etc/firewall.blocklist ] && rm -rf /etc/firewall.blocklist && ln -s $LISTFILE /etc/firewall.blocklist
+
+/etc/init.d/firewall restart > /dev/null 2>&1
