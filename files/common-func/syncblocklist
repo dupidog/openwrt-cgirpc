@@ -8,11 +8,15 @@ while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
     MAC="$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')"
     DISABLED="$(uci get clientlist.@client[$cnt].disabled)"
     BLOCKLIST="$(uci get clientlist.@client[$cnt].blocklist)"
+    BLOCKTIME="$(uci get clientlist.@client[$cnt].blocktime)"
     if [ "$DISABLED" = "1" ]; then
         echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -j DROP" >> $LISTFILE
     else
         for each in $BLOCKLIST; do
             echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m string --string $each --algo kmp -j DROP" >> $LISTFILE
+        done
+        for each in $BLOCKTIME; do
+            echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m time --timestart ${each%-*} --timestop ${each#*-} -j DROP" >> $LISTFILE
         done
     fi
     cnt=$(($cnt+1))

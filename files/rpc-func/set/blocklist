@@ -5,10 +5,13 @@ RET_INFO=""
 json_get_var OPS "operation"
 json_get_var MAC "mac"
 json_get_values BLOCKLIST "site"
+json_get_values BLOCKTIME "time"
 [ "x$BLOCKLIST" = "x" ] && json_get_var BLOCKLIST "site"
+[ "x$BLOCKTIME" = "x" ] && json_get_var BLOCKTIME "time"
 
 MAC="$(echo $MAC | tr '[a-f]' '[A-F]' | grep '^\([0-9,A-F]\{2\}:\)\{5\}[0-9,A-F]\{2\}$')"
 BLOCKLIST="$(echo $BLOCKLIST | tr '|;' '  ' | sed -e 's/J_A1//g')"
+BLOCKTIME="$(echo $BLOCKTIME | tr '|;' '  ' | sed -e 's/J_A1//g')"
 
 [ "x$MAC" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid mac address\"}" && exit 2
 cnt=0
@@ -30,6 +33,20 @@ elif [ "$OPS" = "disable" ]; then
 
     uci set clientlist.@client[$scnt].disabled=1
     RET_INFO="$RET_INFO,\"operation\":\"disable_client\",\"mac\":\"$MAC\""
+
+elif [ "$OPS" = "flushtime" ]; then
+
+    uci delete clientlist.@client[$scnt].blocktime
+    RET_INFO="$RET_INFO,\"operation\":\"flushtime\",\"mac\":\"$MAC\""
+
+elif [ "$OPS" = "settime" ]; then
+
+    uci delete clientlist.@client[$scnt].blocktime
+    for each in $BLOCKTIME; do
+        item="$(echo $each | grep '^\([0-9]\{2\}:\)\{2\}[0-9]\{2\}-\([0-9]\{2\}:\)\{2\}[0-9]\{2\}$')"
+        [ "x$item" != "x"  ] && uci add_list clientlist.@client[$scnt].blocktime="$item"
+    done
+    RET_INFO="$RET_INFO,\"operation\":\"settime\",\"mac\":\"$MAC\",\"time\":\"$(echo $BLOCKTIME | tr ' ' '|')\""
 
 elif [ "$OPS" = "addsite" ]; then
 

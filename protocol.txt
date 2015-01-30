@@ -134,10 +134,16 @@
 
 12.Client list	{"method":"set","target":"clientlist","operation":"delete|modify|flush","mac":MAC,"name":NAME}
 
-13.Block list	{"method":"set","target":"blocklist","operation":"enable|disable|addsite|deletesite|setlist|flushlist",
+13.Block list	{"method":"set","target":"blocklist","operation":"enable|disable","mac":MAC}
+			// enable/disable the network of a device with MAC
+		{"method":"set","target":"blocklist","operation":"addsite|deletesite|setlist|flushlist",
 			"mac":MAC,"site":SITE}
 			// SITE should be key string in the URL which will be filtered.
 			// multiple sites can be divided by space, '|' or ';', or commited in json array.
+		{"method":"set","target":"blocklist","operation":"settime|flushtime","mac":MAC,"time":TIME}
+			// TIME should be formatted as "hh:mm:ss-hh:mm:ss", for example, 23:00:00-06:00:00.
+			// multiple sites can be divided by space, '|' or ';', or commited in json array.
+			// all time means UTC time.
 
 ===BATCHSET====
 

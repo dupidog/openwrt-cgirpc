@@ -17,16 +17,23 @@ done
 [ "$flag" != "1" -o "$scnt" = "-1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"mac not found\"}" && exit 3
 
 json_init
+
 json_add_string "mac" "$MAC"
 [ "$(uci get clientlist.@client[$scnt].disabled)" = "1" ] && ENABLED="0" || ENABLED="1"
 json_add_string "enabled" "$ENABLED"
+
 json_add_array "blocklist"
-
 BLOCKLIST="$(uci get clientlist.@client[$scnt].blocklist)"
-
 for each in $BLOCKLIST; do    
     json_add_string "$each" "$each"
 done
-
 json_close_array
+
+json_add_array "blocktime"
+BLOCKTIME="$(uci get clientlist.@client[$scnt].blocktime)"
+for each in $BLOCKTIME; do    
+    json_add_string "$each" "$each"
+done
+json_close_array
+
 json_dump
