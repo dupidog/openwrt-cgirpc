@@ -1,0 +1,49 @@
+# This script shows current ip and port traffic 
+
+json_init
+
+PORT_TRAFFIC_FILE=/tmp/run/traffic/port_traffic
+PORT_SPEED_FILE=/tmp/run/traffic/port_speed
+IP_SPEED_FILE=/tmp/run/traffic/ip_speed
+
+json_add_array "port_traffic"
+eval "$(cat $PORT_TRAFFIC_FILE | awk '
+    $1=="port_traffic" { print "json_add_object "$2
+        print "json_add_string interface "$2
+        print "json_add_string rx_byte "$3
+        print "json_add_string rx_packet "$4
+        print "json_add_string tx_byte "$5
+        print "json_add_string tx_packet "$6
+        print "json_close_object"
+    }
+')"
+json_close_array
+
+json_add_array "port_speed"
+eval "$(cat $PORT_SPEED_FILE | awk '
+    $1=="port_speed" { print "json_add_object "$2
+        print "json_add_string interface "$2
+        print "json_add_string rx_byte "$3
+        print "json_add_string rx_packet "$4
+        print "json_add_string tx_byte "$5
+        print "json_add_string tx_packet "$6
+        print "json_close_object"
+    }
+')"
+json_close_array
+
+json_add_array "ip_speed"
+eval "$(cat $IP_SPEED_FILE | awk '
+    $1=="ip_speed" { print "json_add_object "$2
+        print "json_add_string ip "$2
+        print "json_add_string mac "$3
+        print "json_add_string rx_byte "$4
+        print "json_add_string rx_packet "$5
+        print "json_add_string tx_byte "$6
+        print "json_add_string tx_packet "$7
+        print "json_close_object"
+    }
+')"
+json_close_array
+
+json_dump

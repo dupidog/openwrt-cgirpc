@@ -37,6 +37,8 @@
 
 14.Block list	{"method":"get","target":"blocklist","mac":MAC}
 
+15.Traffic	{"method":"get","target":"traffic"}
+
 ======SET======
 
 1.WAN		{"method":"set","target":"wan","protocol":"static"","ip":IP,

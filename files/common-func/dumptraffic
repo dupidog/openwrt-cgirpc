@@ -1,0 +1,75 @@
+#! /bin/sh
+
+mkdir -p /tmp/run/traffic
+
+TIME_PERIOD=1
+
+PORT_TRAFFIC_FILE=/tmp/run/traffic/port_traffic
+PORT_SPEED_FILE=/tmp/run/traffic/port_speed
+IP_SPEED_FILE=/tmp/run/traffic/ip_speed
+
+#
+# Port traffic
+#
+
+echo "# Port traffic # port_traffic <if> rx-b rx-p tx-b tx-p" > $PORT_TRAFFIC_FILE
+cat /proc/net/dev | awk '
+    $1=="br-lan:" { print "port_traffic lan "$2" "$3" "$10" "$11}
+    $1=="eth0.2:" { print "port_traffic wan "$2" "$3" "$10" "$11}
+    $1=="eth0.3:" { print "port_traffic stb "$2" "$3" "$10" "$11}
+' >> $PORT_TRAFFIC_FILE
+
+#
+# IP speed
+#
+
+# init ip speed stat chains
+[ "x$(iptables -t mangle -L IPUL 2>/dev/null)" = "x" ] && iptables -t mangle -N IPUL
+[ "x$(iptables -t mangle -L IPDL 2>/dev/null)" = "x" ] && iptables -t mangle -N IPDL
+CLIENTS="$(cat /proc/net/arp | awk '$3=="0x2" && $6=="br-lan" {
+    print $1" "$4
+}' | tr 'a-f' 'A-F')"
+echo "$CLIENTS" | while read line; do
+   iptables -t mangle -I FORWARD 1 -s ${line% *} -j IPUL; 
+   iptables -t mangle -I FORWARD 1 -d ${line% *} -j IPDL; 
+done
+
+sleep $TIME_PERIOD
+
+# echo traffic
+echo "# IP traffic # ip_speed <ip> <mac> rx-b rx-p tx-b tx-p" > $IP_SPEED_FILE
+
+iptables -nvx -t mangle -L FORWARD | awk '
+    $3=="IPDL" { print $9" "$2" "$1" 0 0" }
+    $3=="IPUL" { print $8" 0 0 "$2" "$1 }
+' | awk '{
+    if (ip[$1])
+        print "ip_speed "$1" "int(($2+rb[$1])/'$TIME_PERIOD')" "int(($3+rp[$1])/'$TIME_PERIOD')" "int(($4+tb[$1])/'$TIME_PERIOD')" "int(($5+tp[$1])/'$TIME_PERIOD')
+    else {
+        ip[$1]++
+        rb[$1]=$2
+        rp[$1]=$3
+        tb[$1]=$4
+        tp[$1]=$5
+    }
+}' | while read line; do
+    lineip="$(echo $line | cut -d ' ' -f 2)"
+    lineipmac="$(echo "$CLIENTS" | grep $lineip)"
+    echo "$line" | sed -e "s/$lineip/$lineipmac/g" >> $IP_SPEED_FILE
+done
+
+echo "$CLIENTS" | while read line; do
+    iptables -t mangle -D FORWARD -s ${line% *} -j IPUL
+    iptables -t mangle -D FORWARD -d ${line% *} -j IPDL
+done
+
+#
+# Port speed
+#
+echo "# Port speed # port_speed <if> rx-b rx-p tx-b tx-p" > $PORT_SPEED_FILE
+cat /proc/net/dev $PORT_TRAFFIC_FILE | awk '
+    $1=="br-lan:" { rxb["lan"]=$2; rxp["lan"]=$3; txb["lan"]=$10; txp["lan"]=$11}
+    $1=="eth0.2:" { rxb["wan"]=$2; rxp["wan"]=$3; txb["wan"]=$10; txp["wan"]=$11}
+    $1=="eth0.3:" { rxb["stb"]=$2; rxp["stb"]=$3; txb["stb"]=$10; txp["stb"]=$11}
+    $1=="port_traffic" { print "port_speed "$2" "int((rxb[$2]-$3)/'$TIME_PERIOD')" "int((rxp[$2]-$4)/'$TIME_PERIOD')" "int((txb[$2]-$5)/'$TIME_PERIOD')" "int((txp[$2]-$6)/'$TIME_PERIOD')}
+' >> $PORT_SPEED_FILE
