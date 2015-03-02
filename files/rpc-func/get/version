@@ -1,0 +1,8 @@
+# Rom version get script
+
+json_init
+
+json_add_string "rom_version" "$(cat /etc/openwrt_rom_version)"
+json_add_string "rom_gentime" "$(cat /etc/openwrt_rom_gentime)"
+
+json_dump

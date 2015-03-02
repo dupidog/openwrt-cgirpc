@@ -39,6 +39,8 @@
 
 15.Traffic	{"method":"get","target":"traffic"}
 
+16.Version	{"method":"get","target":"version"}
+
 ======SET======
 
 1.WAN		{"method":"set","target":"wan","protocol":"static"","ip":IP,
