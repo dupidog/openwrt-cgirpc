@@ -145,7 +145,8 @@
 			// SITE should be key string in the URL which will be filtered.
 			// multiple sites can be divided by space, '|' or ';', or commited in json array.
 		{"method":"set","target":"blocklist","operation":"settime|flushtime","mac":MAC,"time":TIME}
-			// TIME should be formatted as "hh:mm:ss-hh:mm:ss", for example, 23:00:00-06:00:00.
+			// this sets the ALLOW time for the device with specified MAC.
+			// TIME should be formatted as "hh:mm:ss-hh:mm:ss", for example, 23:00:00-06:00:00. 
 			// multiple sites can be divided by space, '|' or ';', or commited in json array.
 			// all time means UTC time.
 

@@ -15,9 +15,12 @@ while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
         for each in $BLOCKLIST; do
             echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m string --string $each --algo kmp -j DROP" >> $LISTFILE
         done
-        for each in $BLOCKTIME; do
-            echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m time --timestart ${each%-*} --timestop ${each#*-} -j DROP" >> $LISTFILE
-        done
+        if [ "x$BLOCKTIME" != "x" ]; then
+            echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m time --timestart 00:00:00 --timestop 23:59:59 -j DROP" >> $LISTFILE
+            for each in $BLOCKTIME; do
+                echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m time --timestart ${each%-*} --timestop ${each#*-} -j ACCEPT" >> $LISTFILE
+            done
+        fi
     fi
     cnt=$(($cnt+1))
 done
