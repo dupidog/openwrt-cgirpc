@@ -5,6 +5,10 @@ $COMMON_FUNC_PATH/syncclientlist
 json_init
 json_add_array "clientlist"
 
+eval "$(cat /proc/net/arp | awk '$3=="0x2" && $6=="br-lan" {print "(arp -d "$1"; ping -c 1 -w 1 "$1" ) > /dev/null &"}')"
+
+sleep 1
+
 eval "$(cat /proc/net/arp | awk '$3=="0x2" && $6=="br-lan" { print "ONLINE_"$4"="$1 }' | tr 'abcdef:' 'ABCDEF_' )"
 
 cnt=0
