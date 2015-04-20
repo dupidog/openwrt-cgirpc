@@ -1,3 +1,4 @@
 # WWAN status get script
 
-ifstatus wwan | sed -e 's/-/_/g'
+json_load "$(ifstatus wwan | sed -e 's/-/_/g')"
+json_dump

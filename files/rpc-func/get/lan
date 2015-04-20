@@ -1,3 +1,4 @@
 # LAN status get script
 
-ifstatus lan | sed -e 's/-/_/g'
+json_load "$(ifstatus lan | sed -e 's/-/_/g')"
+json_dump
