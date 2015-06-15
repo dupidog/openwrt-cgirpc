@@ -41,6 +41,8 @@
 
 16.Version	{"method":"get","target":"version"}
 
+17.Factorydmp	{"method":"get","target":"factorydump"}
+
 ======SET======
 
 1.WAN		{"method":"set","target":"wan","protocol":"static"","ip":IP,
@@ -166,3 +168,12 @@
 
 4.Rest router   {"method":"sys","target":"reset"}
 
+======FAC======
+
+1.Dump		{"method":"fac","target":"dump"} 
+			// Same as get/factorydump scripts
+
+2.Write		{"method":"sys","target":"write","mac_wlan2G":MAC_2G,"mac_wlan5G":MAC_5G,"mac_lan1":MAC_LAN1,
+			"mac_lan2":MAC_LAN2,"sn1":SN1,"sn2":SN2}
+			// the script writes factory info. MAC_LAN1 and MAC_LAN2 are optional for reserved usage.
+			// max length of SN1 and SN2 is 16.

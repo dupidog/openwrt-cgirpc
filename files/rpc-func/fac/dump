@@ -1,0 +1,20 @@
+# Facotry info get script
+
+mkdir -p /tmp/factory
+dd if=/dev/mtdblock2 bs=1 skip=4 count=6 | xxd -p 2> /dev/null > /tmp/factory/macwlan2g
+dd if=/dev/mtdblock2 bs=1 skip=32772 count=6 | xxd -p 2> /dev/null > /tmp/factory/macwlan5g
+dd if=/dev/mtdblock2 bs=1 skip=40 count=6 | xxd -p 2> /dev/null > /tmp/factory/maclan1
+dd if=/dev/mtdblock2 bs=1 skip=46 count=6 | xxd -p 2> /dev/null > /tmp/factory/maclan2
+dd if=/dev/mtdblock2 bs=1 skip=272 count=16 | tr -d '\xff' 2> /dev/null > /tmp/factory/sn1
+dd if=/dev/mtdblock2 bs=1 skip=288 count=16 | tr -d '\xff' 2> /dev/null > /tmp/factory/sn2
+
+json_init
+
+json_add_string "mac_wlan2G" "$(cat /tmp/factory/macwlan2g)"
+json_add_string "mac_wlan5G" "$(cat /tmp/factory/macwlan5g)"
+json_add_string "mac_lan1" "$(cat /tmp/factory/maclan1)"
+json_add_string "mac_lan2" "$(cat /tmp/factory/maclan2)"
+json_add_string "sn1" "$(cat /tmp/factory/sn1)"
+json_add_string "sn2" "$(cat /tmp/factory/sn2)"
+
+json_dump
