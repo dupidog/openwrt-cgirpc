@@ -1,4 +1,4 @@
-# WAN set script
+# Factory info write script
 
 json_get_var MAC_WLAN2G "mac_wlan2G"
 json_get_var MAC_WLAN5G "mac_wlan5G"
@@ -7,9 +7,37 @@ json_get_var MAC_LAN2 "mac_lan2"
 json_get_var SN1 "sn1"
 json_get_var SN2 "sn2"
 
-[ "x$MAC_WLAN2G" != "x" ] && echo $MAC_WLAN2G | tr -d ':' | xxd -r -p > /tmp/factory/macwlan2g_w && dd if=/tmp/factory/macwlan2g_w of=/dev/mtdblock2 bs=1 seek=4 count=6
-[ "x$MAC_WLAN5G" != "x" ] && echo $MAC_WLAN5G | tr -d ':' | xxd -r -p > /tmp/factory/macwlan5g_w && dd if=/tmp/factory/macwlan5g_w of=/dev/mtdblock2 bs=1 seek=32772 count=6
-[ "x$MAC_LAN1" != "x" ] && echo $MAC_LAN1 | tr -d ':' | xxd -r -p > /tmp/factory/maclan1_w && dd if=/tmp/factory/maclan1_w of=/dev/mtdblock2 bs=1 seek=40 count=6
-[ "x$MAC_LAN2" != "x" ] && echo $MAC_LAN2 | tr -d ':' | xxd -r -p > /tmp/factory/maclan2_w && dd if=/tmp/factory/maclan2_w of=/dev/mtdblock2 bs=1 seek=46 count=6
-[ "x$SN1" != "x" ] && SN1=${SN1:0:16} && echo '\xff' > /tmp/factory/0xff && echo $SN1 > /tmp/factory/sn1_w && dd if=/tmp/factory/0xff of=/dev/mtdblock2 bs=1 seek=272 count=16 && dd if=/tmp/factory/sn1_w of=/dev/mtdblock2 bs=1 seek=272 count=${#SN1}
-[ "x$SN2" != "x" ] && SN2=${SN2:0:16} && echo '\xff' > /tmp/factory/0xff && echo $SN2 > /tmp/factory/sn2_w && dd if=/tmp/factory/0xff of=/dev/mtdblock2 bs=1 seek=288 count=16 && dd if=/tmp/factory/sn2_w of=/dev/mtdblock2 bs=1 seek=288 count=${#SN2}
+RET_INFO=
+
+# Write factory mac addresses
+[ "x$MAC_WLAN2G" != "x" ] && echo $MAC_WLAN2G | tr -d ':' | xxd -r -p > /tmp/factory/macwlan2g_w && \
+dd if=/tmp/factory/macwlan2g_w of=/dev/mtdblock2 bs=1 seek=4 count=6 && \
+RET_INFO="$RET_INFO,\"mac_wlan2G\":\"$MAC_WLAN2G\""
+
+[ "x$MAC_WLAN5G" != "x" ] && echo $MAC_WLAN5G | tr -d ':' | xxd -r -p > /tmp/factory/macwlan5g_w && \
+dd if=/tmp/factory/macwlan5g_w of=/dev/mtdblock2 bs=1 seek=32772 count=6 && \
+RET_INFO="$RET_INFO,\"mac_wlan5G\":\"$MAC_WLAN5G\""
+
+[ "x$MAC_LAN1" != "x" ] && echo $MAC_LAN1 | tr -d ':' | xxd -r -p > /tmp/factory/maclan1_w && \
+dd if=/tmp/factory/maclan1_w of=/dev/mtdblock2 bs=1 seek=40 count=6 && \
+RET_INFO="$RET_INFO,\"mac_lan1\":\"$MAC_LAN1\""
+
+[ "x$MAC_LAN2" != "x" ] && echo $MAC_LAN2 | tr -d ':' | xxd -r -p > /tmp/factory/maclan2_w && \
+dd if=/tmp/factory/maclan2_w of=/dev/mtdblock2 bs=1 seek=46 count=6 && \
+RET_INFO="$RET_INFO,\"mac_lan2\":\"$MAC_LAN2\""
+
+# Write factory serial numbers
+[ "x$SN1" != "x" ] && SN1=${SN1:0:16} && \
+echo "ffffffffffffffffffffffffffffffff" | xxd -r -p > /tmp/factory/0xff && echo $SN1 > /tmp/factory/sn1_w && \
+dd if=/tmp/factory/0xff of=/dev/mtdblock2 bs=1 seek=272 count=16 && \
+dd if=/tmp/factory/sn1_w of=/dev/mtdblock2 bs=1 seek=272 count=${#SN1} && \
+RET_INFO="$RET_INFO,\"sn1\":\"$SN1\""
+
+[ "x$SN2" != "x" ] && SN2=${SN2:0:16} && \
+echo "ffffffffffffffffffffffffffffffff" | xxd -r -p > /tmp/factory/0xff && echo $SN2 > /tmp/factory/sn2_w && \
+dd if=/tmp/factory/0xff of=/dev/mtdblock2 bs=1 seek=288 count=16 && \
+dd if=/tmp/factory/sn2_w of=/dev/mtdblock2 bs=1 seek=288 count=${#SN2} && \
+RET_INFO="$RET_INFO,\"sn2\":\"$SN2\""
+
+# Echo result
+[ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"
