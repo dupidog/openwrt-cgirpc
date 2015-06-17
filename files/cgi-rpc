@@ -18,14 +18,18 @@ SYS_OPS_DELAY=$(uci get cgirpc.common.sys_ops_delay | grep "^[0-9]\{1,6\}$")
 
 [ "$REQUEST_METHOD" = "POST" ] && QUERY_STRING=$(cat -)
 
-json_load "$(echo $QUERY_STRING | sed 's/^rpc=//g' | $COMMON_FUNC_PATH/urldecode)"
+# Output html header
+echo "Content-type: text/json"
+echo ""
 
+# Load query string
+json_load "$(echo $QUERY_STRING | sed 's/^rpc=//g' | $COMMON_FUNC_PATH/urldecode)" 2>/tmp/cgi-rpc_err_json_load
+[ "x`cat /tmp/cgi-rpc_err_json_load`" != "x" ] && echo '{"RET":"JSON_PARSE_ERROR"}' && exit 2
+
+# Get METHOD, TARGET, AUTHPW
 json_get_var METHOD "method"
 json_get_var TARGET "target"
 json_get_var AUTHPW "auth"
-
-echo "Content-type: text/json"
-echo ""
 
 # Check secure network in config file
 AUTH=$(echo "$REMOTE_ADDR $AUTH_NETWORK" | $COMMON_FUNC_PATH/checknetwork)
@@ -38,8 +42,10 @@ AUTH=$(echo "$REMOTE_ADDR $AUTH_NETWORK" | $COMMON_FUNC_PATH/checknetwork)
 
 [ "$AUTH" != "1" ] && echo '{"RET":"NOT_AUTHORIZED"}' && exit 1
 
+# Store the AUTH info
 mkdir -p /tmp/cgi-rpc-auth && date +%s > /tmp/cgi-rpc-auth/$REMOTE_ADDR
 
+# Print debug message
 if [ "$DEBUG" != "0" -a "x$DEBUG" != "x" ]; then
 echo "+-+-------Debug JSON--------+-+"
 echo "Translated query string: $QUERY_STRING"
@@ -49,7 +55,9 @@ echo "Run script: rpc-func/$METHOD/$TARGET"
 echo "+-+-------------------------+-+"
 fi
 
-[ "x$METHOD" = "x" -a "x$TARGET" = "x" ] && echo '{"RET":"OK"}' && exit 0
+# Check METHOD and TARGET
+[ "x$METHOD" = "x" -o "x$TARGET" = "x" ] && echo '{"RET":"NO_METHOD_OR_TARGET"}' && exit 0
+
 # Batch mode
 if [ "$METHOD" = "batchset" ]; then
 
