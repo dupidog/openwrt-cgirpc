@@ -2,4 +2,4 @@
 
 rm -rf /overlay/*
 echo "{\"ret\":\"OK\"}"
-(sleep $SYS_OPS_DELAY; reboot) &
+(sleep $SYS_OPS_DELAY; mtd -r erase /dev/mtd6) &
