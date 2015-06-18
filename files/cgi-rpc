@@ -55,8 +55,11 @@ echo "Run script: rpc-func/$METHOD/$TARGET"
 echo "+-+-------------------------+-+"
 fi
 
+# Auth-only command
+[ "x$METHOD" = "x" -a "x$TARGET" = "x" ] && [ "x$AUTH_PASSWORD" != "x" ] && [ "$AUTH_PASSWORD" = "$AUTHPW" ] && echo '{"RET":"OK"}' && exit 0
+
 # Check METHOD and TARGET
-[ "x$METHOD" = "x" -o "x$TARGET" = "x" ] && echo '{"RET":"NO_METHOD_OR_TARGET"}' && exit 0
+[ "x$METHOD" = "x" -o "x$TARGET" = "x" ] && echo '{"RET":"NO_METHOD_OR_TARGET"}' && exit 1
 
 # Batch mode
 if [ "$METHOD" = "batchset" ]; then
