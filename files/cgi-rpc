@@ -24,7 +24,7 @@ echo ""
 
 # Load query string
 json_load "$(echo $QUERY_STRING | sed 's/^rpc=//g' | $COMMON_FUNC_PATH/urldecode)" 2>/tmp/cgi-rpc_err_json_load
-[ "x`cat /tmp/cgi-rpc_err_json_load`" != "x" ] && echo '{"RET":"JSON_PARSE_ERROR"}' && exit 2
+[ "x`cat /tmp/cgi-rpc_err_json_load`" != "x" ] && echo '{"ret":"JSON_PARSE_ERROR"}' && exit 2
 
 # Get METHOD, TARGET, AUTHPW
 json_get_var METHOD "method"
@@ -40,7 +40,7 @@ AUTH=$(echo "$REMOTE_ADDR $AUTH_NETWORK" | $COMMON_FUNC_PATH/checknetwork)
 # Check password delivered in json
 [ "$AUTH" != "1" ] && [ "x$AUTH_PASSWORD" != "x" ] && [ "$AUTH_PASSWORD" = "$AUTHPW" ] && AUTH=1
 
-[ "$AUTH" != "1" ] && echo '{"RET":"NOT_AUTHORIZED"}' && exit 1
+[ "$AUTH" != "1" ] && echo '{"ret":"NOT_AUTHORIZED"}' && exit 1
 
 # Store the AUTH info
 mkdir -p /tmp/cgi-rpc-auth && date +%s > /tmp/cgi-rpc-auth/$REMOTE_ADDR
@@ -55,11 +55,13 @@ echo "Run script: rpc-func/$METHOD/$TARGET"
 echo "+-+-------------------------+-+"
 fi
 
-# Auth-only command
-[ "x$METHOD" = "x" -a "x$TARGET" = "x" ] && [ "x$AUTH_PASSWORD" != "x" ] && [ "$AUTH_PASSWORD" = "$AUTHPW" ] && echo '{"RET":"OK"}' && exit 0
+# Auth-only command for checking cgi-rpc status
+[ "x$METHOD" = "x" -a "x$TARGET" = "x" ] && [ "x$AUTH_PASSWORD" != "x" ] && [ "$AUTH_PASSWORD" = "$AUTHPW" ] && \
+{ [ x`cat /tmp/performing 2>/dev/null` = "x" ] && echo '{"ret":"OK"}' || \
+echo '{"ret":"PERFORMING"}'; } && exit 0
 
 # Check METHOD and TARGET
-[ "x$METHOD" = "x" -o "x$TARGET" = "x" ] && echo '{"RET":"NO_METHOD_OR_TARGET"}' && exit 1
+[ "x$METHOD" = "x" -o "x$TARGET" = "x" ] && echo '{"ret":"NO_METHOD_OR_TARGET"}' && exit 1
 
 # Batch mode
 if [ "$METHOD" = "batchset" ]; then

@@ -1,4 +1,4 @@
 # Reboot script
 
-echo "{\"ret\":\"OK\"}"
-(sleep $SYS_OPS_DELAY; reboot) &
+echo "{\"ret\":\"PERFORMING\"}"
+(sleep $SYS_OPS_DELAY; echo reboot > /tmp/performing; reboot) &

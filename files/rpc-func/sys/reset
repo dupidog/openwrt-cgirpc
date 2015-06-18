@@ -1,5 +1,5 @@
 # Reset script
 
 rm -rf /overlay/*
-echo "{\"ret\":\"OK\"}"
-(sleep $SYS_OPS_DELAY; mtd -r erase /dev/mtd6) &
+echo "{\"ret\":\"PERFORMING\"}"
+(sleep $SYS_OPS_DELAY; echo reset > /tmp/performing; mtd -r erase /dev/mtd6) &

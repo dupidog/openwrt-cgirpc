@@ -1,4 +1,5 @@
 # Network restart script
 
-echo "{\"ret\":\"OK\"}"
-(sleep $SYS_OPS_DELAY; /etc/init.d/network restart > /dev/null) &
+echo "{\"ret\":\"PERFORMING\"}"
+(sleep $SYS_OPS_DELAY; echo network > /tmp/performing; \
+/etc/init.d/network restart > /dev/null; rm -rf /tmp/performing) &
