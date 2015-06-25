@@ -1,0 +1,37 @@
+#WPS pbc script
+
+WPS_LED=/sys/devices/gpio-leds/leds/chuangjia:yellow:register
+DEVICE=`ls /var/run/hostapd`
+PID_FILE=/var/run/wps_pbc.pid
+
+wps_pbc_cancel () {
+	echo none > $WPS_LED/trigger
+	kill `cat $PID_FILE`
+	for each in $DEVICE; do
+		hostapd_cli -i $each wps_cancel
+	done
+	rm -rf $PID_FILE
+}
+
+wps_pbc_start () {
+	echo timer > $WPS_LED/trigger
+	local runflag=1
+	for s in `seq 1 20`; do
+		for each in $DEVICE; do
+			hostapd_cli -i $each wps_pbc
+			sleep 3
+			[ "`hostapd_cli -i $each wps_get_status | grep -o Active`" != "Active" ] && \
+			echo none > $WPS_LED/trigger && runflag=0 && break
+			hostapd_cli -i $each wps_cancel
+		done
+		[ "$runflag" = 0 ] && break
+	done
+	echo none > $WPS_LED/trigger
+	rm -rf $PID_FILE
+}
+
+echo "WPS PBC START" > /dev/console
+[ -f $PID_FILE ] && wps_pbc_cancel > /dev/null
+wps_pbc_start & > /dev/null
+echo $! > $PID_FILE
+echo "{\"ret\":\"OK\"}"

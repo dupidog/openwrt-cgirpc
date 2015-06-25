@@ -160,13 +160,19 @@
 
 ======SYS======
 
-1.Reboot router {"method":"sys","target":"reboot"}
+1.Reboot router	{"method":"sys","target":"reboot"}
 
-2.Restart wifi  {"method":"sys","target":"wifi"}
+2.Restart wifi	{"method":"sys","target":"wifi"}
 
-3.Restart net   {"method":"sys","target":"network"}
+3.Restart net	{"method":"sys","target":"network"}
 
-4.Rest router   {"method":"sys","target":"reset"}
+4.Rest router	{"method":"sys","target":"reset"}
+
+5.WPS button	{"method":"sys","target":"wps"}
+
+6.Restart dhcp	{"method":"sys","target":"dhcp"}
+
+7.Restart fw	{"method":"sys","target":"firewall"}
 
 ======FAC======
 
