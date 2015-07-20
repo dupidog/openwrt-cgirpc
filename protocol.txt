@@ -61,12 +61,13 @@
 		{"method":"set","target":"wlan","device":DEVICE,"ssid":SSID,"bssid":BSSID}
 			// default device value is "radio0"; bssid needs to be specified when
 			// device working in ap client mode
-		{"method":"set","target":"wlan","device":DEVICE,"encryption":"none|wep-open|
-			wep-shared|psk|psk2|psk-mixed","key":KEY|[KEY-NO,KEY1,KEY2,KEY3,KEY4]}
+		{"method":"set","target":"wlan","device":DEVICE,"encryption":"none|wep-open(unused)|
+			wep-shared|psk(unused)|psk2|psk-mixed","key":KEY|[KEY-NO,KEY1,KEY2,KEY3,KEY4]}
 			// default device value is "radio0"; if psk|psk2|psk-mixed used, key 
 			// should be simply KEY; if wep-open|wep-shared used, key should be 
 			// in format [KEY-NO,KEY1,KEY2,KEY3,KEY4], specify KEY will be traslated 
-			// to [1,KEY,,,]; if none encryption, key will be ignored
+			// to [1,KEY,,,]; if none encryption, key will be ignored; for consistence,
+			// psk|wep-open will not used in client APK.
 
 3.LAN		{"method":"set","target":"lan","ip":IP,"netmask":NETMASK}
 
