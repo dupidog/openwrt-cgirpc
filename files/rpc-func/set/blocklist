@@ -3,81 +3,71 @@
 RET_INFO=""
 
 json_get_var OPS "operation"
-json_get_var MAC "mac"
+json_get_var ID "id"
+json_get_var NAME "name"
 json_get_values BLOCKLIST "site"
-json_get_values BLOCKTIME "time"
+json_get_values TIMERANGE "time"
 [ "x$BLOCKLIST" = "x" ] && json_get_var BLOCKLIST "site"
-[ "x$BLOCKTIME" = "x" ] && json_get_var BLOCKTIME "time"
+[ "x$TIMERANGE" = "x" ] && json_get_var TIMERANGE "time"
 
-MAC="$(echo $MAC | tr '[a-f]' '[A-F]' | grep '^\([0-9,A-F]\{2\}:\)\{5\}[0-9,A-F]\{2\}$')"
 BLOCKLIST="$(echo $BLOCKLIST | tr '|;' '  ' | sed -e 's/J_A1//g')"
-BLOCKTIME="$(echo $BLOCKTIME | tr '|;' '  ' | sed -e 's/J_A1//g')"
+TIMERANGE="$(echo $TIMERANGE | tr '|;' '  ' | sed -e 's/J_A1//g')"
 
-[ "x$MAC" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid mac address\"}" && exit 2
-cnt=0
-scnt=-1
-flag=0
-while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
-    [ "$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')" = "$MAC" ] && flag=1 && scnt=$cnt
-    cnt=$(($cnt+1))
-done
+if [ "$OPS" = "delete" -o "$OPS" = "modify" ]; then
 
-[ "$flag" != "1" -o "$scnt" = "-1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"mac not found\"}" && exit 3
+    [ "x$ID" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid id\"}" && exit 2
 
-if [ "$OPS" = "enable" ]; then
-
-    uci set clientlist.@client[$scnt].disabled=0
-    RET_INFO="$RET_INFO,\"operation\":\"enable_client\",\"mac\":\"$MAC\""
-
-elif [ "$OPS" = "disable" ]; then
-
-    uci set clientlist.@client[$scnt].disabled=1
-    RET_INFO="$RET_INFO,\"operation\":\"disable_client\",\"mac\":\"$MAC\""
-
-elif [ "$OPS" = "flushtime" ]; then
-
-    uci delete clientlist.@client[$scnt].blocktime
-    RET_INFO="$RET_INFO,\"operation\":\"flushtime\",\"mac\":\"$MAC\""
-
-elif [ "$OPS" = "settime" ]; then
-
-    uci delete clientlist.@client[$scnt].blocktime
-    for each in $BLOCKTIME; do
-        item="$(echo $each | grep '^\([0-9]\{2\}:\)\{2\}[0-9]\{2\}-\([0-9]\{2\}:\)\{2\}[0-9]\{2\}$')"
-        [ "x$item" != "x"  ] && uci add_list clientlist.@client[$scnt].blocktime="$item"
+    cnt=0
+    scnt=-1
+    flag=0
+    while [ "x$(uci get blocklist.@policy[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
+        [ "$(uci get blocklist.@policy[$cnt].id)" = "$ID" ] && flag=1 && scnt=$cnt
+        cnt=$(($cnt+1))
     done
-    RET_INFO="$RET_INFO,\"operation\":\"settime\",\"mac\":\"$MAC\",\"time\":\"$(echo $BLOCKTIME | tr ' ' '|')\""
 
-elif [ "$OPS" = "addsite" ]; then
-
-    for each in $BLOCKLIST; do
-        uci add_list clientlist.@client[$scnt].blocklist=$each
-    done
-    RET_INFO="$RET_INFO,\"operation\":\"addsite\",\"mac\":\"$MAC\",\"site\":\"$(echo $BLOCKLIST | tr ' ' '|')\""
-
-elif [ "$OPS" = "deletesite" ]; then
-
-    for each in $BLOCKLIST; do
-        uci del_list clientlist.@client[$scnt].blocklist=$each
-    done
-    RET_INFO="$RET_INFO,\"operation\":\"deletesite\",\"mac\":\"$MAC\",\"site\":\"$(echo $BLOCKLIST | tr ' ' '|')\""
-
-elif [ "$OPS" = "flushlist" ]; then
-
-    uci delete clientlist.@client[$scnt].blocklist
-    RET_INFO="$RET_INFO,\"operation\":\"flushlist\",\"mac\":\"$MAC\""
-
-elif [ "$OPS" = "setlist" ]; then
-
-    uci delete clientlist.@client[$scnt].blocklist
-    for each in $BLOCKLIST; do
-        uci add_list clientlist.@client[$scnt].blocklist=$each
-    done
-    RET_INFO="$RET_INFO,\"operation\":\"setlist\",\"mac\":\"$MAC\",\"site\":\"$(echo $BLOCKLIST | tr ' ' '|')\""
+[ "$flag" != "1" -o "$scnt" = "-1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"id not found\"}" && exit 3
 
 fi
 
-uci commit clientlist
+if [ "$OPS" = "add" ]; then
+
+    SECTION=$(uci add blocklist policy)
+    ID=$(date +%s)
+    uci set blocklist.$SECTION.id="$ID"
+    uci set blocklist.$SECTION.name="$NAME"
+    for each in $TIMERANGE; do
+        item="$(echo $each | grep '^\([0-9]\{2\}:\)\{2\}[0-9]\{2\}-\([0-9]\{2\}:\)\{2\}[0-9]\{2\}$')"
+        [ "x$item" != "x" ] && uci add_list blocklist.$SECTION.time="$item"
+    done
+    for each in $BLOCKLIST; do
+        [ "x$each" != "x" ] && uci add_list blocklist.$SECTION.site="$each"
+    done
+
+    RET_INFO="$RET_INFO,\"operation\":\"add\",\"id\":\"$ID\""
+
+elif [ "$OPS" = "modify" ]; then
+
+    uci set blocklist.@policy[$scnt].name="$NAME"
+    uci delete blocklist.@policy[$scnt].time
+    for each in $TIMERANGE; do
+        item="$(echo $each | grep '^\([0-9]\{2\}:\)\{2\}[0-9]\{2\}-\([0-9]\{2\}:\)\{2\}[0-9]\{2\}$')"
+        [ "x$item" != "x" ] && uci add_list blocklist.@policy[$scnt].time="$item"
+    done
+    uci delete blocklist.@policy[$scnt].site
+    for each in $BLOCKLIST; do
+        [ "x$each" != "x" ] && uci add_list blocklist.@policy[$scnt].site="$each"
+    done
+
+    RET_INFO="$RET_INFO,\"operation\":\"modify\",\"id\":\"$ID\""
+
+elif [ "$OPS" = "delete" ]; then
+
+    uci delete blocklist.@policy[$scnt]
+    RET_INFO="$RET_INFO,\"operation\":\"delete\",\"id\":\"$ID\""
+
+fi
+
+uci commit blocklist
 $COMMON_FUNC_PATH/syncblocklist > /dev/null 2>&1
 
 # Echo result

@@ -5,8 +5,21 @@ RET_INFO=""
 json_get_var OPS "operation"
 json_get_var MAC "mac"
 json_get_var NAME "name"
+json_get_values POLICYID "policyid"
+[ "x$POLICYID" = "x" ] && json_get_var POLICYID "policyid"
 
+POLICYID="$(echo $POLICYID | tr '|;' '  ' | sed -e 's/J_A1//g')"
 MAC="$(echo $MAC | tr '[a-f]' '[A-F]' | grep '^\([0-9,A-F]\{2\}:\)\{5\}[0-9,A-F]\{2\}$')"
+
+[ "x$MAC" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid mac address\"}" && exit 2
+cnt=0
+scnt=-1
+flag=0
+while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
+    [ "$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')" = "$MAC" ] && flag=1 && scnt=$cnt
+    cnt=$(($cnt+1))
+done
+[ "$flag" != "1" -o "$scnt" = "-1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"mac not found\"}" && exit 3
 
 if [ "$OPS" = "add" ]; then
 
@@ -14,26 +27,13 @@ if [ "$OPS" = "add" ]; then
 
 elif [ "$OPS" = "delete" ]; then
 
-    [ "x$MAC" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid mac address\"}" && exit 2
-    cnt=0
-    flag=0
-    while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
-        [ "$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')" = "$MAC" ] && flag=1 && uci delete clientlist.@client[$cnt]
-        cnt=$(($cnt+1))
-    done
-    [ "$flag" != "1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"mac not found\"}" && exit 3
+    uci delete clientlist.@client[$scnt]
     RET_INFO="$RET_INFO,\"operation\":\"delete_clientlist\",\"mac\":\"$MAC\""
 
 elif [ "$OPS" = "modify" ]; then
 
-    [ "x$MAC" = "x" -o "x$NAME" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid mac address or name\"}" && exit 2
-    cnt=0
-    flag=0
-    while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
-        [ "$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')" = "$MAC" ] && flag=1 && uci set clientlist.@client[$cnt].name="$NAME"
-        cnt=$(($cnt+1))
-    done
-    [ "$flag" != "1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"mac not found\"}" && exit 3
+    [ "x$NAME" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid name\"}" && exit 2
+    uci set clientlist.@client[$scnt].name="$NAME"
     RET_INFO="$RET_INFO,\"operation\":\"modify_clientlist\",\"mac\":\"$MAC\""
 
 elif [ "$OPS" = "flush" ]; then
@@ -46,9 +46,44 @@ elif [ "$OPS" = "flush" ]; then
 
     RET_INFO="$RET_INFO,\"operation\":\"flush_clientlist\""
 
+elif [ "$OPS" = "enablepolicy" ]; then
+
+    for each in $POLICYID; do
+        [ "x$(uci get clientlist.@client[$scnt].policy | grep $each)" = "x" ] && \
+        uci add_list clientlist.@client[$scnt].policy=$each
+    done
+    RET_INFO="$RET_INFO,\"operation\":\"enable_policy\",\"mac\":\"$MAC\",\"policyid\":\"$POLICYID\""
+
+elif [ "$OPS" = "disablepolicy" ]; then
+
+    for each in $POLICYID; do
+        uci del_list clientlist.@client[$scnt].policy=$each
+    done
+    RET_INFO="$RET_INFO,\"operation\":\"disable_policy\",\"mac\":\"$MAC\",\"policyid\":\"$POLICYID\""
+
+elif [ "$OPS" = "setpolicy" ]; then
+
+    uci delete clientlist.@client[$scnt].policy
+    for each in $POLICYID; do
+        [ "x$(uci get clientlist.@client[$scnt].policy | grep $each)" = "x" ] && \
+        uci add_list clientlist.@client[$scnt].policy=$each
+    done
+    RET_INFO="$RET_INFO,\"operation\":\"set_policy\",\"mac\":\"$MAC\",\"policyid\":\"$POLICYID\""
+
+elif [ "$OPS" = "enableclient" ]; then
+
+    uci set clientlist.@client[$scnt].disabled=0
+    RET_INFO="$RET_INFO,\"operation\":\"enable_client\",\"mac\":\"$MAC\""
+
+elif [ "$OPS" = "disableclient" ]; then
+
+    uci set clientlist.@client[$scnt].disabled=1
+    RET_INFO="$RET_INFO,\"operation\":\"disable_client\",\"mac\":\"$MAC\""
+
 fi
 
 uci commit clientlist
+$COMMON_FUNC_PATH/syncblocklist > /dev/null 2>&1
 
 # Echo result
 [ "x$RET_INFO" != "x" ] && echo "{\"ret\":\"OK\"$RET_INFO}" || echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"no valid args\"}"

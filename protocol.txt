@@ -35,7 +35,7 @@
 		{"method":"get","target":"onlineclientlist"}
 			// legency online clientlist on LAN/WAN/STB
 
-14.Block list	{"method":"get","target":"blocklist","mac":MAC}
+14.Block list	{"method":"get","target":"blocklist"}
 
 15.Traffic	{"method":"get","target":"traffic"}
 
@@ -67,7 +67,7 @@
 			// should be simply KEY; if wep-open|wep-shared used, key should be 
 			// in format [KEY-NO,KEY1,KEY2,KEY3,KEY4], specify KEY will be traslated 
 			// to [1,KEY,,,]; if none encryption, key will be ignored; for consistence,
-			// psk|wep-open will not used in client APK.
+			// psk|wep-open will NOT be used in client APK.
 
 3.LAN		{"method":"set","target":"lan","ip":IP,"netmask":NETMASK}
 
@@ -140,17 +140,22 @@
 			// use this command will overwrite system wifi allow/deny lists!
 
 12.Client list	{"method":"set","target":"clientlist","operation":"delete|modify|flush","mac":MAC,"name":NAME}
+			// client list operation.
+		{"method":"set","target":"clientlist","operation":"enableclient|disableclient","mac":MAC}
+			// enable|disable client.
+		{"method":"set","target":"clientlist","operation":"enablepolicy|disablepolicy","mac":MAC,
+			"policyid":POLICYID}
+			// enable|disable policies for client, multiple policy ids can be divided by space, 
+			//'|' or ';', or commited in json array.
 
-13.Block list	{"method":"set","target":"blocklist","operation":"enable|disable","mac":MAC}
-			// enable/disable the network of a device with MAC
-		{"method":"set","target":"blocklist","operation":"addsite|deletesite|setlist|flushlist",
-			"mac":MAC,"site":SITE}
-			// SITE should be key string in the URL which will be filtered.
-			// multiple sites can be divided by space, '|' or ';', or commited in json array.
-		{"method":"set","target":"blocklist","operation":"settime|flushtime","mac":MAC,"time":TIME}
-			// this sets the ALLOW time for the device with specified MAC.
+13.Block list	{"method":"set","target":"blocklist","operation":"add|modify|delete","id":ID,"name":NAME,
+			"time":TIME,"site":SITE}
+			// this sets the block polices used by clients. 
+			// for modify and delete operation, section 'id' must be specified.
+			// name, time and site MUST BE SPECIFIED in modify operation, otherwise it will be 
+			// set to empty string.
 			// TIME should be formatted as "hh:mm:ss-hh:mm:ss", for example, 23:00:00-06:00:00. 
-			// multiple sites can be divided by space, '|' or ';', or commited in json array.
+			// multiple sites and times can be divided by space, '|' or ';', or commited in json array.
 			// all time means UTC time.
 
 ===BATCHSET====

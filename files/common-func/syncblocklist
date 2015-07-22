@@ -1,28 +1,47 @@
 #!/bin/sh
 
 LISTFILE=/tmp/cgi-rpc.firewall.blocklist
-echo > $LISTFILE
+cat /dev/null > $LISTFILE
 
-cnt=0
-while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
-    MAC="$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')"
-    DISABLED="$(uci get clientlist.@client[$cnt].disabled)"
-    BLOCKLIST="$(uci get clientlist.@client[$cnt].blocklist)"
-    BLOCKTIME="$(uci get clientlist.@client[$cnt].blocktime)"
+count=0
+while [ "x$(uci get clientlist.@client[$count] 2>&1 1>/dev/null)" = "x" ]; do
+    MAC="$(uci get clientlist.@client[$count].mac | tr 'a-f' 'A-F')"
+    DISABLED="$(uci get clientlist.@client[$count].disabled)"
+    POLICY="$(uci get clientlist.@client[$count].policy)"
     if [ "$DISABLED" = "1" ]; then
+
         echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -j DROP" >> $LISTFILE
+
     else
-        for each in $BLOCKLIST; do
-            echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m string --string $each --algo kmp -j DROP" >> $LISTFILE
-        done
-        if [ "x$BLOCKTIME" != "x" ]; then
-            echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m time --timestart 00:00:00 --timestop 23:59:59 -j DROP" >> $LISTFILE
-            for each in $BLOCKTIME; do
-                echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m time --timestart ${each%-*} --timestop ${each#*-} -j ACCEPT" >> $LISTFILE
+
+        [ "x$POLICY" != "x" ] && echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m time --timestart 00:00:00 --timestop 23:59:59 -j DROP" >> $LISTFILE
+        
+        for each in $POLICY; do
+            cnt=0
+            scnt=-1
+            flag=0
+            while [ "x$(uci get blocklist.@policy[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
+                [ "$(uci get blocklist.@policy[$cnt].id)" = "$each" ] && flag=1 && scnt=$cnt
+                cnt=$(($cnt+1))
             done
-        fi
+            if [ "$flag" != "1" -o "$scnt" = "-1" ]; then
+                BLOCKLIST=
+                TIMERANGE=
+                uci del_list clientlist.@client[$count].policy="$each"
+            else
+                BLOCKLIST="$(uci get blocklist.@policy[$scnt].site)"
+                TIMERANGE="$(uci get blocklist.@policy[$scnt].time)"
+            fi
+
+            for each_time in $TIMERANGE; do
+                echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m time --timestart ${each_time%-*} --timestop ${each_time#*-} -j ACCEPT" >> $LISTFILE
+                for each_site in $BLOCKLIST; do
+                    echo "iptables -t mangle -I FORWARD -m mac --mac-source $MAC -m time --timestart ${each_time%-*} --timestop ${each_time#*-} -m string --string $each_site --algo kmp -j DROP" >> $LISTFILE
+                done
+            done
+        done
     fi
-    cnt=$(($cnt+1))
+    count=$(($count+1))
 done
 
 [ ! -L /etc/firewall.blocklist ] && rm -rf /etc/firewall.blocklist && ln -s $LISTFILE /etc/firewall.blocklist

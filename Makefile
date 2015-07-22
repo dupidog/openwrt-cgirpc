@@ -98,6 +98,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/etc/config
 	$(CP) ./files/cgirpc.config $(1)/etc/config/cgirpc
 	$(CP) ./files/clientlist.config $(1)/etc/config/clientlist
+	$(CP) ./files/blocklist.config $(1)/etc/config/blocklist
 	$(INSTALL_DIR) $(1)/www/cgi-bin
 	$(CP) ./files/cgi-rpc $(1)/www/cgi-bin/cgi-rpc
 	$(INSTALL_DIR) $(1)/etc/crontabs

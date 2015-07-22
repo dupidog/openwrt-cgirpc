@@ -1,39 +1,33 @@
 # This script lists the blocklist and enable/disable status of each clients
 
-$COMMON_FUNC_PATH/syncclientlist
+json_init
+json_add_array "blocklist"
 
-json_get_var MAC "mac"
-
-MAC="$(echo $MAC | tr '[a-f]' '[A-F]' | grep '^\([0-9,A-F]\{2\}:\)\{5\}[0-9,A-F]\{2\}$')"
-
-[ "x$MAC" = "x" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"invalid mac address\"}" && exit 2
 cnt=0
-scnt=-1
-flag=0
-while [ "x$(uci get clientlist.@client[$cnt] 2>&1 1>/dev/null)" = "x" -a "flag" != "1" ]; do
-    [ "$(uci get clientlist.@client[$cnt].mac | tr 'a-f' 'A-F')" = "$MAC" ] && flag=1 && scnt=$cnt
+while [ "x$(uci get blocklist.@policy[$cnt] 2>&1 1>/dev/null)" = "x" ]; do
+
+    json_add_object "$cnt"
+
+    json_add_string "id" "$(uci get blocklist.@policy[$cnt].id)"
+    json_add_string "name" "$(uci get blocklist.@policy[$cnt].name)"
+
+    json_add_array "time"
+    TIMERANGE="$(uci get blocklist.@policy[$cnt].time)"
+    for each in $TIMERANGE; do    
+        json_add_string "$each" "$each"
+    done
+    json_close_array
+
+    json_add_array "site"
+    BLOCKLIST="$(uci get blocklist.@policy[$cnt].site)"
+    for each in $BLOCKLIST; do    
+        json_add_string "$each" "$each"
+    done
+    json_close_array
+
+    json_close_object
     cnt=$(($cnt+1))
 done
-[ "$flag" != "1" -o "$scnt" = "-1" ] && echo "{\"ret\":\"ERROR\",\"reason\":\"mac not found\"}" && exit 3
 
-json_init
-
-json_add_string "mac" "$MAC"
-[ "$(uci get clientlist.@client[$scnt].disabled)" = "1" ] && ENABLED="0" || ENABLED="1"
-json_add_string "enabled" "$ENABLED"
-
-json_add_array "blocklist"
-BLOCKLIST="$(uci get clientlist.@client[$scnt].blocklist)"
-for each in $BLOCKLIST; do    
-    json_add_string "$each" "$each"
-done
 json_close_array
-
-json_add_array "blocktime"
-BLOCKTIME="$(uci get clientlist.@client[$scnt].blocktime)"
-for each in $BLOCKTIME; do    
-    json_add_string "$each" "$each"
-done
-json_close_array
-
 json_dump
