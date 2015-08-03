@@ -61,7 +61,7 @@ fi
 echo '{"ret":"PERFORMING"}'; } && exit 0
 
 # Check METHOD and TARGET
-[ "x$METHOD" = "x" -o "x$TARGET" = "x" ] && echo '{"ret":"NO_METHOD_OR_TARGET"}' && exit 1
+[ "x$METHOD" = "x" -o "x$TARGET" = "x" ] && [ "$METHOD" != "batchset" ] && echo '{"ret":"NO_METHOD_OR_TARGET"}' && exit 1
 
 # Batch mode
 if [ "$METHOD" = "batchset" ]; then
