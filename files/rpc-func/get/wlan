@@ -32,16 +32,16 @@ do
 
     IWLIST="$(iw phy$(echo $DEVICE | sed -e 's/^[A-Z,a-z]*//g') info)"
     CHNLS5G="$(echo "$IWLIST" | \
-        sed -e 's/\[\|\]//g' | \
-        awk '$1=="*" && $3=="MHz" && $4>20 && NF==6 {print $4}'
+        sed -e 's/\[//g' -e 's/\]//g' | \
+        awk '$1=="*" && $3=="MHz" && $4>20 && $6=="dBm)" {print $4}'
     )"
     if [ "x$CHNLS5G" != "x" ]; then
         CHNLS="$CHNLS5G"
         json_add_string "band" "5G"
     else
         CHNLS="$(echo "$IWLIST" | \
-            sed -e 's/\[\|\]//g' | \
-            awk '$1=="*" && $3=="MHz" && NF==6 {print $4}'
+            sed -e 's/\[//g' -e 's/\]//g' | \
+            awk '$1=="*" && $3=="MHz" && $6=="dBm)" {print $4}'
         )"
         json_add_string "band" "2.4G"
     fi
