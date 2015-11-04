@@ -1,7 +1,11 @@
 # AP mode switch script
 #
-# Mode ap means access point mode ( Master Mode )
-# Mode sta means station mode ( Client Mode )
+# This script is DEPRECATED and NOT RECOMMENDED FOR USE, and is just 
+# for legacy compatitable support. Please set 'enabled' option of each 
+# wifi-iface segment.
+#
+# Mode ap means disable wifi client ( Master Mode ONLY )
+# Mode sta means enable wifi mode ( Master and Client Mode BOTH )
 
 json_get_var DEVICE "device"
 json_get_var MODE "mode"
@@ -28,7 +32,8 @@ ifnum=-1
 while [ $tempnum -le 4 ]
 do
     if [ "`uci get wireless.@wifi-iface[$tempnum]`" = "wifi-iface" -a \
-        "`uci get wireless.@wifi-iface[$tempnum].device`" = "$DEVICE" ]; then
+        "`uci get wireless.@wifi-iface[$tempnum].device`" = "$DEVICE" -a \
+        "`uci get wireless.@wifi-iface[$tempnum].mode`" = "sta" ]; then
         ifnum=$tempnum
     fi
     tempnum=$(($tempnum+1))
@@ -43,20 +48,10 @@ CURMODE="$(uci get wireless.@wifi-iface[$ifnum].mode)"
 
 [ "$CURMODE" = "$MODE" ] && echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"mode not change\",\"mode\":\"$MODE\"}" && exit 1;
 
-# Backup current setting
-uci set wireless.backup_${DEVICE}_${CURMODE}=backup-wifi-iface
-eval "$(uci show wireless.@wifi-iface[$ifnum] | awk -F '.' 'NF==3{print $3}' | sed -e "s/^/uci\ set\ wireless.backup_${DEVICE}_${CURMODE}./g")"
-
-# Try restore previous backup
-if [ "$(uci get wireless.backup_${DEVICE}_${MODE})" = "backup-wifi-iface" ]; then
-    uci delete wireless.@wifi-iface[$ifnum]
-    SECTION="$(uci add wireless wifi-iface)"
-    eval "$(uci show wireless.backup_${DEVICE}_${MODE} | awk -F '.' 'NF==3 {print $3}' | sed -e "s/^/uci\ set\ wireless.${SECTION}./g")"
-# Set the mode and network if no backup found
+if [ "$MODE" = "ap" ]; then
+    uci set wireless.@wifi-iface[$ifnum].disabled=1
 else
-    uci set wireless.@wifi-iface[$ifnum].mode=$MODE
-    [ "$MODE" = "ap" ] && uci set wireless.@wifi-iface[$ifnum].network=lan || \
-    uci set wireless.@wifi-iface[$ifnum].network=wwan
+    uci set wireless.@wifi-iface[$ifnum].disabled=0
 fi
 
 # Set wwan and dhcp

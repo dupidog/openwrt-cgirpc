@@ -58,16 +58,16 @@
 			// default device value is "radio0"
 		{"method":"set","target":"wlan","device":DEVICE,"channel":CHANNEL}
 			// default device value is "radio0"
-		{"method":"set","target":"wlan","device":DEVICE,"ssid":SSID,"bssid":BSSID}
-			// default device value is "radio0"; bssid needs to be specified when
-			// device working in ap client mode
-		{"method":"set","target":"wlan","device":DEVICE,"encryption":"none|wep-open(unused)|
+		{"method":"set","target":"wlan","device":DEVICE,"mode":"ap|sta","ssid":SSID,"bssid":BSSID}
+			// default device value is "radio0", default mode value is "ap"
+			// bssid needs to be specified in "sta" config segment
+		{"method":"set","target":"wlan","device":DEVICE,"mode":"ap|sta","encryption":"none|wep-open(unused)|
 			wep-shared|psk(unused)|psk2|psk-mixed","key":KEY|[KEY-NO,KEY1,KEY2,KEY3,KEY4]}
-			// default device value is "radio0"; if psk|psk2|psk-mixed used, key 
-			// should be simply KEY; if wep-open|wep-shared used, key should be 
-			// in format [KEY-NO,KEY1,KEY2,KEY3,KEY4], specify KEY will be traslated 
-			// to [1,KEY,,,]; if none encryption, key will be ignored; for consistence,
-			// psk|wep-open will NOT be used in client APK.
+			// default device value is "radio0", default mode value is "ap"
+			// if psk|psk2|psk-mixed used, key should be simply KEY; if wep-open|wep-shared used, 
+			// key should be in format [KEY-NO,KEY1,KEY2,KEY3,KEY4], specify KEY will be traslated 
+			// to [1,KEY,,,]; if none encryption, key will be ignored; for consistence, psk|wep-open 
+			// will NOT be used in client APK.
 
 3.LAN		{"method":"set","target":"lan","ip":IP,"netmask":NETMASK}
 
@@ -119,7 +119,7 @@
 		{"method":"set","target":"qos","qosrule":"delete","id":ID}
 
 8.AP mode	{"method":"set","target":"apmode","device":DEVICE,"mode":"ap|sta"}
-			// ommit device means "radio0", ap mode means "Access Point" or "Master" mode,
+*DEPRECATED*		// ommit device means "radio0", ap mode means "Access Point" or "Master" mode,
 			// sta mode means "Station" or "Client" mode. After switching mode, a previos
 			// backup setting will be used.
 

@@ -3,6 +3,7 @@
 json_get_var WLAN_DEVICE "device"
 json_get_var WLAN_ENABLED "enabled"
 json_get_var WLAN_CHANNEL "channel"
+json_get_var WLAN_MODE "mode"
 json_get_var WLAN_ENCRYPTION "encryption"
 json_get_var WLAN_SSID "ssid"
 json_get_var WLAN_BSSID "bssid"
@@ -17,6 +18,10 @@ RET_INFO=""
 if [ "x$WLAN_DEVICE" = "x" ]; then WLAN_DEVICE="radio0"; fi
 RET_INFO="$RET_INFO,\"device\":\"$WLAN_DEVICE\""
 
+# default wlan device
+if [ "$WLAN_MODE" != "sta" ]; then WLAN_MODE="ap"; fi
+RET_INFO="$RET_INFO,\"mode\":\"$WLAN_MODE\""
+
 # check wlan device
 if [ "x`uci get wireless.$WLAN_DEVICE`" = "x" ]; then
     echo "{\"ret\":\"NOT_CHANGED\",\"reason\":\"invalid wlan device\"}"
@@ -26,10 +31,11 @@ fi
 # search/match wifi-iface
 tempnum=0
 ifnum=-1
-while [ $tempnum -le 4 ]
+while [ $tempnum -le 8 ]
 do
     if [ "`uci get wireless.@wifi-iface[$tempnum]`" = "wifi-iface" -a \
-        "`uci get wireless.@wifi-iface[$tempnum].device`" = "$WLAN_DEVICE" ]; then
+        "`uci get wireless.@wifi-iface[$tempnum].device`" = "$WLAN_DEVICE" -a \
+        "`uci get wireless.@wifi-iface[$tempnum].device`" = "$WLAN_MODE" ]; then
         ifnum=$tempnum
     fi
     tempnum=$(($tempnum+1))
