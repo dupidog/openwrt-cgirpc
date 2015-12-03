@@ -12,7 +12,7 @@ json_add_string "kernel_ver" "$(uname -r)"
 json_add_string "firmware_ver" "$(cat /etc/openwrt_release | awk -F '=' '$1 == "DISTRIB_DESCRIPTION" { print $2}' | sed -e "s/\"//g")"
 
 TOP_BUF=$(top -b -n 1)
-MEM_LINE=$(echo "$TOP_BUF" | grep ^Mem: | sed -e "s/K\|k//g")
+MEM_LINE=$(echo "$TOP_BUF" | grep ^Mem: | sed -e "s/K//g" -e "s/k//g")
 json_add_string "mem_total" "$(echo "$MEM_LINE" | awk '{print $2+$4}')"
 json_add_string "mem_used" "$(echo "$MEM_LINE" | awk '{print $2}')"
 json_add_string "mem_free" "$(echo "$MEM_LINE" | awk '{print $4}')"

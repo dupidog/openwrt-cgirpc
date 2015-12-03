@@ -10,7 +10,7 @@ json_get_var WLAN_BSSID "bssid"
 json_get_var WLAN_KEY "key"
 
 WLAN_CHANNEL=$(echo $WLAN_CHANNEL | grep ^[0-9]*$)
-if [ "x$(echo $WLAN_KEY | grep '^JSON_ARRAY')" != "x" ]; then json_get_values WLAN_KEY "key"; fi
+if [ "$WLAN_KEY" = "JSON_ARRAY" -o "$WLAN_KEY" = "J_A1" ]; then json_get_values WLAN_KEY "key"; fi
 
 RET_INFO=""
 
